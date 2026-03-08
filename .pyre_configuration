@@ -1,0 +1,12 @@
+{
+  "source_directories": [
+    "."
+  ],
+  "search_path": [
+    "c:/Users/Alexander Jimenez/Desktop/Unphu-BI/.venv/Lib/site-packages",
+    "c:/Users/Alexander Jimenez/Desktop/Unphu-BI/src"
+  ],
+  "exclude": [
+    ".venv/.*"
+  ]
+}

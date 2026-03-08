@@ -1,0 +1,1331 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UNPHUSIST-BI | Dashboard Salud Académica</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%233D9744%22/><text x=%2250%22 y=%2272%22 font-family=%22Georgia, serif%22 font-size=%2265%22 font-weight=%22bold%22 fill=%22white%22 text-anchor=%22middle%22>U</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-dark: #001f3f;
+            /* Dark blue for header */
+            --primary-blue: #0A3977;
+            /* Text blue */
+            --secondary-blue: #dce5ef;
+            --primary-green: #0f9b58;
+            /* Vibrant green */
+            --light-green: #e6f4ea;
+            --alert-red: #ea4335;
+            --light-red: #fce8e6;
+            --alert-yellow: #fbbc04;
+            --light-yellow: #fef7e0;
+            --bg-color: #f7f9fa;
+            --card-bg: #ffffff;
+            --text-main: #202124;
+            --text-light: #5f6368;
+            --border-color: #e0e0e0;
+
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            --shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* NAVBAR */
+        .navbar {
+            background-color: var(--primary-dark);
+            color: white;
+            padding: 0.75rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 700;
+            font-size: 1.25rem;
+            letter-spacing: 0.5px;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: white;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-dark);
+            font-weight: 800;
+            font-family: 'Georgia', serif;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .nav-links a {
+            color: #a9b5c2;
+            text-decoration: none;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .nav-links a.active {
+            color: white;
+            border-bottom-color: white;
+        }
+
+        .nav-links a:hover {
+            color: white;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .search-container {
+            position: relative;
+        }
+
+        .search-container input {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            padding: 0.5rem 1rem 0.5rem 2.2rem;
+            border-radius: 20px;
+            color: white;
+            font-size: 0.85rem;
+            width: 250px;
+            outline: none;
+        }
+
+        .search-container input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .search-container::before {
+            content: "🔍";
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.8rem;
+            opacity: 0.6;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-align: right;
+            cursor: pointer;
+        }
+
+        .user-info-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .user-id {
+            font-size: 0.75rem;
+            color: #a9b5c2;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: var(--primary-green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1rem;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            object-fit: cover;
+        }
+
+        /* MAIN CONTENT AREA */
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 2rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* HEADER SECTION */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-title h1 {
+            font-size: 2rem;
+            color: var(--primary-blue);
+            font-weight: 800;
+            margin-bottom: 0.25rem;
+        }
+
+        .page-title p {
+            color: var(--text-light);
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.6rem 1.2rem;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .btn-outline {
+            background: white;
+            border-color: var(--border-color);
+            color: var(--text-main);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-outline:hover {
+            background: #f8f9fa;
+            box-shadow: var(--shadow-md);
+            transform: translateY(-1px);
+        }
+
+        .btn-primary {
+            background: var(--primary-green);
+            color: white;
+            box-shadow: 0 2px 4px rgba(15, 155, 88, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: #0d874c;
+            box-shadow: 0 4px 8px rgba(15, 155, 88, 0.4);
+            transform: translateY(-1px);
+        }
+
+        /* GRID LAYOUT */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            grid-gap: 1.5rem;
+        }
+
+        .row-2-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            grid-gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .bottom-grid {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            grid-gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        /* CARDS */
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            flex-direction: column;
+            transition: box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-hover);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-title {
+            font-weight: 700;
+            color: var(--primary-blue);
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-title svg {
+            width: 18px;
+            height: 18px;
+            fill: var(--primary-green);
+        }
+
+        .badge-sub {
+            background: var(--bg-color);
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-light);
+            border: 1px solid var(--border-color);
+        }
+
+        /* SEMAFAFO CIRCULAR */
+        .progress-circle-wrapper {
+            display: flex;
+            justify-content: center;
+            margin: 1rem 0 2rem;
+            position: relative;
+        }
+
+        .progress-circle {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: conic-gradient(var(--primary-green) 75%, var(--border-color) 0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .progress-inner {
+            width: 150px;
+            height: 150px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .progress-inner h2 {
+            font-size: 2.5rem;
+            color: var(--primary-blue);
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .progress-inner span {
+            font-size: 0.7rem;
+            color: var(--text-light);
+            font-weight: 600;
+            letter-spacing: 1px;
+            margin-top: 5px;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 0.5rem;
+        }
+
+        .stat-box {
+            padding: 0.8rem 0.5rem;
+            border-radius: 8px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid transparent;
+        }
+
+        .stat-box.green {
+            background: var(--light-green);
+            border-color: #c3e6cb;
+        }
+
+        .stat-box.yellow {
+            background: var(--light-yellow);
+            border-color: #ffeeb2;
+        }
+
+        .stat-box.red {
+            background: var(--light-red);
+            border-color: #f5c6c2;
+        }
+
+        .stat-num {
+            font-size: 1.4rem;
+            font-weight: 800;
+            line-height: 1.2;
+        }
+
+        .green .stat-num {
+            color: var(--primary-green);
+        }
+
+        .yellow .stat-num {
+            color: #d69e00;
+        }
+
+        .red .stat-num {
+            color: var(--alert-red);
+        }
+
+        .stat-label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 2px;
+        }
+
+        .green .stat-label {
+            color: #2d7a46;
+        }
+
+        .yellow .stat-label {
+            color: #9c7300;
+        }
+
+        .red .stat-label {
+            color: #a12c22;
+        }
+
+        /* COMPARATIVA RENDIMIENTO */
+        .legend-area {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-light);
+            align-items: center;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .dot-blue {
+            background: var(--primary-blue);
+        }
+
+        .dot-green {
+            background: var(--primary-green);
+        }
+
+        .bar-chart-container {
+            margin-top: 1rem;
+        }
+
+        .bar-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-light);
+            margin-bottom: 0.5rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .bar-wrapper {
+            height: 36px;
+            background: #e9ecef;
+            border-radius: 6px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+        }
+
+        .bar-fill-blue {
+            height: 100%;
+            background: var(--primary-blue);
+            width: 70%;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 15px;
+            color: white;
+            font-weight: 700;
+            border-right: 2px solid white;
+        }
+
+        .bar-fill-light {
+            height: 100%;
+            background: var(--secondary-blue);
+            width: 20%;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .mini-stat {
+            border: 1px solid var(--border-color);
+            padding: 1rem;
+            border-radius: 8px;
+            background: #fafbfc;
+        }
+
+        .mini-stat.highlight {
+            background: var(--light-green);
+            border-color: #c3e6cb;
+        }
+
+        .mini-label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .mini-highlight-label {
+            color: #2d7a46;
+        }
+
+        .mini-value {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--primary-blue);
+        }
+
+        .mini-value.green-text {
+            color: var(--primary-green);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 1.2rem;
+        }
+
+        .highlight .mini-value {
+            color: var(--primary-green);
+            font-size: 1.4rem;
+        }
+
+
+        /* ALERTAS PRERREQUISITOS */
+        .card.alert-card {
+            border-top: 4px solid var(--alert-red);
+        }
+
+        .alert-item {
+            border-left: 4px solid transparent;
+            background: #fff;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 0 8px 8px 0;
+            border: 1px solid var(--border-color);
+            border-left-width: 4px;
+        }
+
+        .alert-item.critical {
+            border-left-color: var(--alert-red);
+        }
+
+        .alert-item.warning {
+            border-left-color: var(--alert-yellow);
+        }
+
+        .alert-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .alert-title {
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+
+        .badge-alert {
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: white;
+        }
+
+        .badge-alert.red {
+            background: var(--alert-red);
+        }
+
+        .badge-alert.yellow {
+            background: var(--alert-yellow);
+            color: #856100;
+        }
+
+        .alert-desc {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            line-height: 1.5;
+        }
+
+        .alert-desc strong {
+            color: var(--text-main);
+        }
+
+        .view-map-btn {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px dashed var(--border-color);
+            background: transparent;
+            color: var(--text-light);
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 0.5rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .view-map-btn:hover {
+            border-color: var(--primary-blue);
+            color: var(--primary-blue);
+            background: #f8f9fa;
+        }
+
+        /* CREDITOS & SUGERIDAS */
+        .creditos-card {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            padding: 1.5rem;
+        }
+
+        .credito-icon {
+            width: 50px;
+            height: 50px;
+            background: var(--light-green);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-green);
+        }
+
+        .credito-icon svg {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+
+        .credito-info h3 {
+            font-size: 0.7rem;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.2rem;
+        }
+
+        .credito-info p {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .sugeridas-card {
+            border: 2px solid var(--primary-green);
+        }
+
+        .sugerida-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sugerida-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .sugerida-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .badge-sug {
+            padding: 0.3rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .badge-sug.blue {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+
+        .badge-sug.green {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .badge-sug.yellow {
+            background: #fff8e1;
+            color: #f57f17;
+        }
+
+        /* FOOTER */
+        .page-footer {
+            margin-top: auto;
+            border-top: 1px solid var(--border-color);
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-light);
+            font-size: 0.8rem;
+            font-weight: 500;
+            background: white;
+        }
+
+        .footer-left {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .footer-links a {
+            color: var(--text-light);
+            text-decoration: none;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary-blue);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Top Navigation -->
+    <nav class="navbar">
+        <div class="nav-left">
+            <div class="logo-area">
+                <div class="logo-icon">U</div>
+                UNPHUSIST
+            </div>
+            <div class="nav-links">
+                <a href="#" class="active">Dashboard</a>
+                <a href="historial.html">Historial</a>
+                <a href="prematricula.html">Prematrícula</a>
+                <a href="oficiales.html">Oficiales</a>
+            </div>
+        </div>
+        <div class="nav-right">
+            <div class="search-container">
+                <input type="text" placeholder="Buscar reporte...">
+            </div>
+            <div class="user-profile">
+                <div class="user-info-text">
+                    <span class="user-name" id="userName">Ana López</span>
+                    <span class="user-id" id="userIdBox">ID: 21-0456</span>
+                </div>
+                <div class="avatar" id="userAvatar">A</div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Header -->
+        <div class="page-header">
+            <div class="page-title">
+                <h1>Salud Académica</h1>
+                <p>Módulo de Inteligencia y Soporte de Decisiones (BI/DSS)</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-outline">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
+                    </svg>
+                    Exportar Reporte
+                </button>
+                <button class="btn btn-primary">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 2v6h-6M3 12a9 9 0 1 0 2.5-6L2 9M21 12a9 9 0 0 0-14.5-7" />
+                    </svg>
+                    Actualizar Datos
+                </button>
+            </div>
+        </div>
+
+        <!-- Top Grid -->
+        <div class="dashboard-grid">
+
+            <!-- Semáforo de Progreso -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <svg viewBox="0 0 24 24">
+                            <path
+                                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" />
+                        </svg>
+                        Semáforo de Progreso
+                    </div>
+                    <span class="badge-sub">2023-2</span>
+                </div>
+
+                <div class="progress-circle-wrapper">
+                    <div class="progress-circle" id="progressCircle">
+                        <div class="progress-inner">
+                            <h2 id="progressPercent">75%</h2>
+                            <span>COMPLETADO</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stats-row">
+                    <div class="stat-box green">
+                        <span class="stat-num" id="creditosAprobados">32</span>
+                        <span class="stat-label">CRÉD. APROBADOS</span>
+                    </div>
+                    <div class="stat-box yellow">
+                        <span class="stat-num" id="creditosEnCursoCard">0</span>
+                        <span class="stat-label">CRÉD. EN CURSO</span>
+                    </div>
+                    <div class="stat-box red">
+                        <span class="stat-num" id="creditosPendientesCard">12</span>
+                        <span class="stat-label">CRÉD. PENDIENTES</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comparativa de Rendimiento Global -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M3 3v18h18M7 14l5-5 4 4 5-5" />
+                        </svg>
+                        Comparativa de Rendimiento Global
+                    </div>
+                    <div class="legend-area">
+                        <div class="legend-item">
+                            <div class="legend-dot dot-blue"></div> Mi Índice (3.2)
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-dot dot-green"></div> Promedio Carrera (2.9)
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bar-chart-container">
+                    <div class="bar-labels">
+                        <span id="carreraNombre">MEDICINA (GENERAL)</span>
+                        <span>SEMESTRE ACTUAL</span>
+                    </div>
+                    <div class="bar-wrapper">
+                        <div class="bar-fill-blue" id="indexBarFill" style="width: 72%;">3.20</div>
+                        <div class="bar-fill-light" id="indexBarEmpty" style="width: 15%;"></div>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="mini-stat">
+                        <div class="mini-label">Tendencia Index</div>
+                        <div class="mini-value" id="tendenciaIndexVal">
+                            --
+                        </div>
+                    </div>
+                    <div class="mini-stat">
+                        <div class="mini-label">Índice Acumulado</div>
+                        <div class="mini-value" id="indiceAcumuladoVal">3.25</div>
+                    </div>
+                    <div class="mini-stat">
+                        <div class="mini-label">Ranking</div>
+                        <div class="mini-value" id="rankingEstudianteVal">#--</div>
+                    </div>
+                    <div class="mini-stat">
+                        <div class="mini-label">Créditos Acum.</div>
+                        <div class="mini-value" id="creditosAcumuladosVal">0</div>
+                    </div>
+                    <div class="mini-stat highlight" style="grid-column: span 2;" id="estatusAcadContainer">
+                        <div class="mini-label mini-highlight-label">Estatus Acad.</div>
+                        <div class="mini-value" id="estatusAcadVal">Normal</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Middle Grid -->
+        <div class="row-2-grid">
+
+            <!-- Alertas Prerrequisitos -->
+            <div class="card alert-card">
+                <div class="card-header">
+                    <div class="card-title" style="color: var(--alert-red);">
+                        <svg viewBox="0 0 24 24" style="fill: var(--alert-red);">
+                            <path d="M12 2L1 21h22L12 2zm1 14h-2v-2h2v2zm0-4h-2V8h2v4z" />
+                        </svg>
+                        Alertas de Prerrequisitos Críticos
+                    </div>
+                    <div style="width: 8px; height: 8px; border-radius: 50%; background: #fce8e6;"></div>
+                </div>
+
+                <div id="dynamicAlertsContainer">
+                    <!-- JS DOM Injects Alerts Here -->
+                </div>
+
+                <button class="view-map-btn" id="viewMapBtn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                        <circle cx="12" cy="12" r="3" />
+                    </svg>
+                    Ver Mapa de Correquisitos
+                </button>
+            </div>
+        </div>
+
+        <!-- Bottom Grid -->
+        <div class="bottom-grid">
+            <!-- Creditos faltantes -->
+            <div class="card creditos-card">
+                <div class="credito-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2.81-1.53V17h2V8L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72M12 15l-3.3-1.8 3.3 1.8z" />
+                    </svg>
+                </div>
+                <div class="credito-info">
+                    <h3>MATERIAS FALTANTES</h3>
+                    <p id="materiasFaltantesTxt">1 Materia</p>
+                </div>
+            </div>
+
+            <!-- Sugeridas -->
+            <div class="card sugeridas-card">
+                <div class="card-header" style="margin-bottom: 0.5rem;">
+                    <div class="card-title" style="font-size: 1rem; color: var(--primary-dark);">
+                        <svg viewBox="0 0 24 24" style="fill: var(--primary-green); width: 22px; height: 22px;">
+                            <path
+                                d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z" />
+                        </svg>
+                        Materias Pendientes / Sugeridas
+                    </div>
+                </div>
+
+                <div id="dynamicSugeridasContainer">
+                    <!-- JS DOM Injects Items Here -->
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <footer class="page-footer">
+        <div class="footer-left">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+            </svg>
+            UNPHU Academic Health BI © 2023
+        </div>
+        <div class="footer-links">
+            <a href="#">Términos</a>
+            <a href="#">Privacidad</a>
+            <a href="#">Soporte Técnico</a>
+        </div>
+    </footer>
+
+    <!-- Modal for MAPA CORREQUISITOS -->
+    <div id="mermaidModal"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
+        <div
+            style="background:#fff; width:95%; max-width:1000px; padding:20px; border-radius:12px; max-height:95vh; overflow-y:auto; position:relative;">
+            <button onclick="document.getElementById('mermaidModal').style.display='none'"
+                style="position:absolute; top:20px; right:20px; border:none; background:var(--light-red); color:var(--alert-red); padding:8px 12px; border-radius:6px; cursor:pointer; font-weight:bold;">Cerrar
+                ✕</button>
+            <h2 style="margin-bottom:20px; color:var(--primary-dark); display:flex; gap:10px; align-items:center;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                </svg>
+                Mapa de Correquisitos y Ruta Crítica
+            </h2>
+            <div id="mermaidRenderArea"
+                style="width:100%; text-align:center; min-height: 300px; overflow: auto; display: flex; justify-content: center;">
+                <!-- Grafo inject -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Set user info dynamically if logged in
+        document.addEventListener('DOMContentLoaded', () => {
+            const userName = sessionStorage.getItem('userName');
+            const rawUnphuData = sessionStorage.getItem('unphuData');
+
+            if (userName && userName !== 'undefined') {
+                document.getElementById('userName').textContent = userName;
+
+                // Get initials
+                const initials = userName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                document.getElementById('userAvatar').textContent = initials || 'U';
+
+                // Cargar datos dinámicos de las APIs  de UNPHUSIST
+                if (rawUnphuData) {
+                    try {
+                        const unphuData = JSON.parse(rawUnphuData);
+
+                        if (unphuData.matricula) {
+                            document.getElementById('userIdBox').textContent = "ID: " + unphuData.matricula;
+                        }
+
+                        if (unphuData.carrera) {
+                            // Trim carrera code if too long
+                            const name = unphuData.carrera.split('25')[0] || unphuData.carrera;
+                            document.getElementById('carreraNombre').textContent = name;
+                        }
+
+                        if (unphuData.stats) {
+                            const stats = unphuData.stats;
+
+                            // Calcular pendientes de manera infalible sumando los créditos de las materias faltantes en tiempo real
+                            let pendientesReales = 0;
+                            if (unphuData.pending_subjects && unphuData.pending_subjects.length > 0) {
+                                pendientesReales = unphuData.pending_subjects.reduce((acc, item) => acc + item.credits, 0);
+                            } else {
+                                pendientesReales = Math.max(0, stats.creditosPendientes); // Respaldo if pending list not present
+                            }
+
+                            // Asegurarse de que el aprobado total tenga sentido con respecto al pensum  
+                            let creditosAprobadosReales = stats.creditosAprobados;
+                            if (pendientesReales > 0 && (stats.totalCreditos - pendientesReales) > creditosAprobadosReales) {
+                                creditosAprobadosReales = stats.totalCreditos - pendientesReales;
+                            }
+
+                            document.getElementById('creditosAprobados').textContent = creditosAprobadosReales;
+                            document.getElementById('creditosPendientesCard').textContent = pendientesReales;
+
+                            const materiasFaltantesCount = unphuData.pending_subjects ? unphuData.pending_subjects.length : 0;
+                            const descMaterias = materiasFaltantesCount === 1 ? "Materia" : "Materias";
+                            document.getElementById('materiasFaltantesTxt').textContent = materiasFaltantesCount + " " + descMaterias;
+
+                            // Insertar creditos en curso reales
+                            if (stats.creditosEnCurso !== undefined) {
+                                document.getElementById('creditosEnCursoCard').textContent = stats.creditosEnCurso;
+                            } else {
+                                document.getElementById('creditosEnCursoCard').textContent = "0";
+                            }
+
+                            if (stats.totalCreditos > 0) {
+                                const porcentaje = Math.round((creditosAprobadosReales / stats.totalCreditos) * 100);
+                                document.getElementById('progressPercent').textContent = porcentaje + "%";
+                                document.getElementById('progressCircle').style.background = `conic-gradient(var(--primary-green) ${porcentaje}%, var(--border-color) 0)`;
+                            }
+
+                            // Nuevos campos
+                            document.getElementById('creditosAcumuladosVal').textContent = stats.creditosEvaluados || 0;
+                            const cuIndex = unphuData.indices ? unphuData.indices.cumulativeIndex : 0;
+                            const estatusNode = document.getElementById('estatusAcadVal');
+                            const containerEstatus = document.getElementById('estatusAcadContainer');
+
+                            if (cuIndex >= 3.20) {
+                                estatusNode.textContent = "Honor";
+                                containerEstatus.className = "mini-stat highlight";
+                                containerEstatus.querySelector(".mini-label").style.color = "#2d7a46";
+                                estatusNode.style.color = "var(--primary-green)";
+                            } else if (cuIndex < 2.0 && cuIndex > 0) {
+                                estatusNode.textContent = "Prueba Académica";
+                                containerEstatus.className = "mini-stat highlight";
+                                containerEstatus.style.background = "#fff3cd";
+                                containerEstatus.style.borderColor = "#ffeeba";
+                                containerEstatus.querySelector(".mini-label").style.color = "#856404";
+                                estatusNode.style.color = "#856404";
+                            } else {
+                                estatusNode.textContent = "Normal";
+                                containerEstatus.className = "mini-stat";
+                                containerEstatus.style.background = "#fafbfc";
+                                containerEstatus.style.borderColor = "var(--border-color)";
+                                containerEstatus.querySelector(".mini-label").style.color = "var(--text-light)";
+                                estatusNode.style.color = "var(--primary-blue)";
+                            }
+                            if (unphuData.ranking) {
+                                document.getElementById('rankingEstudianteVal').textContent = `#${unphuData.ranking.rank}/${unphuData.ranking.total}`;
+                            } else {
+                                document.getElementById('rankingEstudianteVal').textContent = "#--/--";
+                            }
+                        }
+
+                        // Poblar Materias Pendientes Dinámicamente
+                        if (unphuData.pending_subjects) {
+                            const sugeridasContainer = document.getElementById('dynamicSugeridasContainer');
+                            sugeridasContainer.innerHTML = ''; // Clear fallback
+
+                            if (unphuData.pending_subjects.length === 0) {
+                                sugeridasContainer.innerHTML = `
+                                    <div class="sugerida-item">
+                                        <span class="sugerida-name">¡Todo el pensum completado!</span>
+                                        <span class="badge-sug green">Graduación</span>
+                                    </div>`;
+                            } else {
+                                unphuData.pending_subjects.forEach(subject => {
+                                    const item = document.createElement('div');
+                                    item.className = 'sugerida-item';
+
+                                    const codeTrunc = subject.code.split('/')[0].trim();
+                                    item.innerHTML = `
+                                        <span class="sugerida-name" title="${subject.name}">${subject.name} (${codeTrunc})</span>
+                                        <span class="badge-sug blue">${subject.credits} Créditos</span>
+                                    `;
+                                    sugeridasContainer.appendChild(item);
+                                });
+                            }
+                        }
+
+                        if (unphuData.indices) {
+                            const indices = unphuData.indices;
+                            const cuIndex = indices.cumulativeIndex;
+                            if (cuIndex && cuIndex > 0) {
+                                document.getElementById('indiceAcumuladoVal').textContent = cuIndex.toFixed(2);
+
+                                // Update chart
+                                const maxIndex = 4.0;
+                                const barHtmlFill = document.getElementById('indexBarFill');
+                                const percentFill = Math.min((cuIndex / maxIndex) * 100, 100);
+                                barHtmlFill.style.width = percentFill + "%";
+                                barHtmlFill.textContent = cuIndex.toFixed(2);
+
+                                // The rest of the bar until the career avg (mock 2.9 here as relative gap, simplified)
+                                const remainingEmpty = 100 - percentFill;
+                                document.getElementById('indexBarEmpty').style.width = remainingEmpty + "%";
+
+                                // Calcular y pintar la Tendencia (Index actual vs Index anterior 2.50)
+                                const lastIndex = 2.50;
+                                const dif = cuIndex - lastIndex;
+                                const tendenciaNode = document.getElementById('tendenciaIndexVal');
+                                if (dif > 0) {
+                                    tendenciaNode.className = "mini-value text-accent-green";
+                                    tendenciaNode.innerHTML = `+${dif.toFixed(2)} <svg width="16" height="16" viewBox="0 0 24 24" fill="none" class="inline" stroke="currentColor" stroke-width="3"><path d="M23 6l-9.5 9.5-5-5L1 18M23 6h-6M23 6v6" /></svg>`;
+                                } else if (dif < 0) {
+                                    tendenciaNode.className = "mini-value text-red-500";
+                                    tendenciaNode.innerHTML = `${dif.toFixed(2)} <svg width="16" height="16" viewBox="0 0 24 24" fill="none" class="inline" stroke="currentColor" stroke-width="3"><path d="M23 18l-9.5-9.5-5 5L1 6M23 18h-6M23 18v-6" /></svg>`;
+                                } else {
+                                    tendenciaNode.className = "mini-value text-slate-500";
+                                    tendenciaNode.innerHTML = `~0.00`;
+                                }
+                            }
+                        }
+
+                        // Validar prerrequisitos (Alertas)
+                        if (unphuData.pending_subjects) {
+
+                            // -----------------------------------------
+                            // ALOJANDO LAS ALERTAS DE PRERREQUISITOS
+                            // -----------------------------------------
+                            const alertsContainer = document.getElementById('dynamicAlertsContainer');
+                            alertsContainer.innerHTML = '';
+
+                            // Buscar materias que "abren" o destrancan otras ("unlocks" > 0)
+                            const materiasLlave = unphuData.pending_subjects.filter(s => s.unlocks && s.unlocks > 0);
+
+                            if (materiasLlave.length === 0) {
+                                alertsContainer.innerHTML = `
+                                    <div class="alert-item" style="border-left-color: var(--primary-green);">
+                                        <div class="alert-header">
+                                            <div class="alert-title" style="color: var(--primary-green);">¡Todo despejado!</div>
+                                            <div class="badge-alert green" style="background: var(--primary-green);">Camino Libre</div>
+                                        </div>
+                                        <div class="alert-desc">
+                                            No tienes materias pendientes que bloqueen o retrasen el resto de tu pensum de manera crítica.
+                                        </div>
+                                    </div>
+                                `;
+                                // Estilizar la tarjeta padre para que luzca verde/positiva
+                                const cardPadre = document.querySelector('.card.alert-card');
+                                if (cardPadre) cardPadre.style.borderTopColor = 'var(--primary-green)';
+                                const cardTitleSVG = document.querySelector('.card.alert-card .card-title svg');
+                                const cardTitle = document.querySelector('.card.alert-card .card-title');
+                                if (cardTitle) {
+                                    cardTitle.style.color = 'var(--primary-green)';
+                                    cardTitle.innerHTML = `
+                                        <svg viewBox="0 0 24 24" style="fill: var(--primary-green); width:18px; height:18px;">
+                                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                                        </svg>
+                                        Análisis de Ruta Crítica
+                                    `;
+                                }
+                            } else {
+                                materiasLlave.forEach(mat => {
+                                    const codeTrunc = mat.code.split('/')[0].trim();
+                                    const esCritica = mat.unlocks >= 2;
+
+                                    const claseColor = esCritica ? 'critical' : 'warning';
+                                    const badgeClass = esCritica ? 'red' : 'yellow';
+                                    const badgeText = esCritica ? 'Alta Prioridad' : 'Advertencia';
+
+                                    const itemHtml = `
+                                        <div class="alert-item ${claseColor}">
+                                            <div class="alert-header">
+                                                <div class="alert-title">${mat.name} (${codeTrunc})</div>
+                                                <div class="badge-alert ${badgeClass}">${badgeText}</div>
+                                            </div>
+                                            <div class="alert-desc">
+                                                <strong>Atención:</strong> Esta materia es llave y destranca <strong>${mat.unlocks} materia(s)</strong> de tu carrera. Su estatus pendiente frena tu avance óptimo en el pensum.
+                                            </div>
+                                        </div>
+                                    `;
+                                    alertsContainer.innerHTML += itemHtml;
+                                });
+                            }
+                        }
+                    } catch (e) {
+                        console.error("Error parseando unphu data", e);
+                    }
+                }
+            } else {
+                window.location.href = "index.html";
+            }
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({ startOnLoad: false, theme: 'base', themeVariables: { primaryColor: '#E8F5E9', edgeLabelBackground: '#ffffff', tertiaryColor: '#fce4ec' } });
+
+        document.getElementById('viewMapBtn').addEventListener('click', async () => {
+            const rawUnphuData = sessionStorage.getItem('unphuData');
+            if (!rawUnphuData) return;
+
+            const unphuData = JSON.parse(rawUnphuData);
+            if (!unphuData.pending_subjects) return;
+
+            let graph = 'graph TD;\n';
+            let hasLinks = false;
+
+            // Definir estilos
+            graph += 'classDef basico fill:#e2e8f0,stroke:#64748b,stroke-width:2px,color:#1e293b;\n';
+            graph += 'classDef fuerte fill:#bfdbfe,stroke:#2563eb,stroke-width:2px,color:#1e3a8a,font-weight:bold;\n';
+
+            // Función para limpiar IDs y evitar errores de sintaxis en Mermaid (remueve guiones, paréntesis, etc)
+            const safeId = (str) => {
+                return str ? str.replace(/[^a-zA-Z0-9]/g, '') : '';
+            };
+
+            // Nodos obligatorios pendientes
+            unphuData.pending_subjects.forEach(s => {
+                const code = s.code || s.codeSubject || '';
+                const sId = safeId(code);
+                if (!sId) return;
+                const cleanName = (s.name || s.subject || '').replace(/"/g, '\\"').toUpperCase();
+                const nodeClass = (s.unlocks && s.unlocks >= 2) ? ':::fuerte' : ':::basico';
+                // ID["Codigo real: Nombre"]
+                graph += `    ${sId}["${code}: ${cleanName}"]${nodeClass}\n`;
+            });
+
+            // Enlaces
+            unphuData.pending_subjects.forEach(s => {
+                const code = s.code || s.codeSubject || '';
+                const sId = safeId(code);
+                if (!sId) return;
+                let reqs = (s.codeRequired || '').trim();
+                if (reqs && reqs.toLowerCase() !== 'none' && reqs.toLowerCase() !== 'null') {
+                    reqs = reqs.replace(/ o /g, ' y ');
+                    const reqList = reqs.split(/[,y]/).map(r => r.trim()).filter(r => r);
+                    reqList.forEach(r => {
+                        const rId = safeId(r);
+                        if (rId) {
+                            graph += `    ${rId} --> ${sId};\n`;
+                            hasLinks = true;
+                        }
+                    });
+                }
+            });
+
+            if (!hasLinks) {
+                graph += '    A[No tienes materias pendientes con prerrequisito]:::basico --> B[Progreso Libre]:::fuerte;\n';
+            }
+
+            const container = document.getElementById('mermaidRenderArea');
+
+            try {
+                const { svg } = await mermaid.render('graph-svg-container', graph);
+                container.innerHTML = svg;
+            } catch (err) {
+                console.error("Mermaid Render Error", err);
+                container.innerHTML = `<div style="color:var(--alert-red); text-align:left;">Error generando mapa. Diagrama crudo:<br><pre style="font-size:11px; margin-top:10px; background:#f8f9fa; padding:10px; border-radius:5px;">${graph}</pre></div>`;
+            }
+
+            document.getElementById('mermaidModal').style.display = 'flex';
+        });
+    </script>
+</body>
+
+</html>

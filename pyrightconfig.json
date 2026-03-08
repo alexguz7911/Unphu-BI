@@ -1,0 +1,8 @@
+{
+    "venvPath": "c:/Users/Alexander Jimenez/Desktop/Unphu-BI",
+    "venv": ".venv",
+    "extraPaths": [
+        "c:/Users/Alexander Jimenez/Desktop/Unphu-BI/.venv/Lib/site-packages",
+        "."
+    ]
+}
