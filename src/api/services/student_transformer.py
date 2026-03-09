@@ -41,9 +41,13 @@ def parse_prerequisites(pending_list: List[Dict[str, Any]]) -> List[Dict[str, An
 def build_history_by_period(historial: List[Dict[str, Any]]) -> Dict[str, List[Dict[str, Any]]]:
     """Converts the raw history list into a nice dictionary grouped by semester."""
     history_by_period: Dict[str, List[Dict[str, Any]]] = {}
+    seen_subject_codes_in_period: Dict[str, set] = {}
+    
     for subject in historial:
         per = str(subject.get('semester', '')).strip()
         if not per: continue
+        
+        code = str(subject.get('codeSubject', '')).strip()
         
         let = str(subject.get('lyrics', '')).strip()
         num = str(subject.get('number', '')).strip()
@@ -53,6 +57,13 @@ def build_history_by_period(historial: List[Dict[str, Any]]) -> Dict[str, List[D
         if let or num or obs:
             if per not in history_by_period:
                 history_by_period[per] = []
+                seen_subject_codes_in_period[per] = set()
+                
+            # Deduplicar: si ya vimos este código exacto en este periodo, no lo repetimos
+            if code and code in seen_subject_codes_in_period[per]:
+                continue
+            if code:
+                seen_subject_codes_in_period[per].add(code)
                 
             status = "Cursando"
             if let in ['A', 'B', 'C'] or obs in ['AP', 'EX']:
