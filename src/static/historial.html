@@ -45,53 +45,42 @@
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 
 <body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen">
     <div class="layout-container flex h-full grow flex-col">
-        <!-- Top Navigation Bar -->
-        <header
-            class="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 lg:px-10 py-3 sticky top-0 z-50">
-            <div class="flex items-center gap-4 text-primary dark:text-white cursor-pointer"
-                onclick="window.location.href='/'">
-                <div class="size-8 flex items-center justify-center bg-primary rounded-lg text-white">
-                    <span class="material-symbols-outlined">school</span>
+        <!-- Top Navigation Bar (Global Style) -->
+        <nav class="bg-[#001f3f] text-white px-8 py-3 flex justify-between items-center shadow-md relative z-50">
+            <div class="flex items-center gap-8">
+                <div class="flex items-center gap-3 font-bold text-xl tracking-wide cursor-pointer"
+                    onclick="window.location.href='/'">
+                    <div class="w-8 h-8 flex items-center justify-center bg-white rounded-md text-[#001f3f] font-bold font-serif"
+                        style="font-family: 'Georgia', serif;">U</div>
+                    UNPHUSIST
                 </div>
-                <div class="flex flex-col">
-                    <h2 class="text-primary dark:text-white text-lg font-bold leading-tight tracking-tight">UNPHUSIST
-                    </h2>
-                    <span class="text-[10px] uppercase tracking-widest font-semibold opacity-70">Portal Académico</span>
-                </div>
-            </div>
-            <div class="flex flex-1 justify-end gap-4 items-center">
-                <div class="hidden md:flex gap-1 mr-4">
-                    <button
-                        class="flex items-center justify-center rounded-lg h-10 w-10 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                        onclick="window.location.href='/'">
-                        <span class="material-symbols-outlined text-slate-600 dark:text-slate-400">arrow_back</span>
-                    </button>
-                    <button
-                        class="flex items-center justify-center rounded-lg h-10 w-10 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                        <span class="material-symbols-outlined text-slate-600 dark:text-slate-400">notifications</span>
-                    </button>
-                    <button
-                        class="flex items-center justify-center rounded-lg h-10 w-10 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                        <span class="material-symbols-outlined text-slate-600 dark:text-slate-400">settings</span>
-                    </button>
-                </div>
-                <div class="flex items-center gap-3 pl-4 border-l border-slate-200 dark:border-slate-700">
-                    <div class="text-right hidden sm:block">
-                        <p class="text-sm font-bold leading-none" id="userNameHeader">Cargando...</p>
-                        <p class="text-xs text-slate-500 mt-1" id="userEmailHeader">Cargando...</p>
-                    </div>
-                    <div
-                        class="bg-primary/10 border-2 border-primary/20 rounded-full size-10 flex items-center justify-center overflow-hidden">
-                        <img class="w-full h-full object-cover" id="userAvatarHeader" data-alt="User profile picture"
-                            src="" />
-                    </div>
+                <div class="hidden md:flex gap-6 text-sm font-medium">
+                    <a href="dashboard.html"
+                        class="text-[#a9b5c2] pb-1 border-b-2 border-transparent hover:text-white transition-all">Dashboard</a>
+                    <a href="historial.html"
+                        class="text-white pb-1 border-b-2 border-white transition-all pointer-events-none">Historial</a>
+                    <a href="prematricula.html"
+                        class="text-[#a9b5c2] pb-1 border-b-2 border-transparent hover:text-white transition-all">Prematrícula</a>
+                    <a href="oficiales.html"
+                        class="text-[#a9b5c2] pb-1 border-b-2 border-transparent hover:text-white transition-all">Oficiales</a>
                 </div>
             </div>
-        </header>
+            <div class="flex items-center gap-6">
+                <div class="flex items-center gap-3 text-right cursor-pointer" onclick="window.location.href='/'">
+                    <div class="hidden sm:flex flex-col">
+                        <span class="text-sm font-semibold uppercase leading-tight" id="userName">Cargando...</span>
+                        <span class="text-xs text-[#a9b5c2] lowercase leading-tight" id="userIdBox">...</span>
+                    </div>
+                    <div class="w-9 h-9 flex items-center justify-center rounded-full bg-[#0f9b58] font-bold text-sm border-2 border-white/20 text-white"
+                        id="userAvatar">U</div>
+                </div>
+            </div>
+        </nav>
 
         <main class="max-w-[1200px] mx-auto w-full px-4 lg:px-10 py-8">
             <!-- Page Header -->
@@ -102,11 +91,11 @@
                     <p class="text-slate-500 dark:text-slate-400">Consulta tu registro académico detallado por período.
                     </p>
                 </div>
-                <!-- Funcionalidad pendiente: Exportar a PDF (fuera del scope actual) -->
-                <button onclick="window.print()"
+                <!-- Export to PDF Action -->
+                <button id="btnExportPdf"
                     class="flex items-center justify-center gap-2 bg-primary text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-primary/90 transition-all shadow-sm">
                     <span class="material-symbols-outlined text-[20px]">picture_as_pdf</span>
-                    Exportar / Imprimir
+                    Exportar a PDF
                 </button>
             </div>
 
@@ -155,7 +144,7 @@
 
             <!-- Semáforo de Progreso -->
             <div
-                class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm mb-10">
+                class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm mb-10 break-inside-avoid">
                 <div class="flex items-center gap-3 mb-6">
                     <span class="material-symbols-outlined text-primary dark:text-white">traffic</span>
                     <h2 class="text-xl font-bold text-primary dark:text-white">Semáforo de Progreso Académico</h2>
@@ -247,7 +236,7 @@
 
             <!-- Evolución del GPA Chart Container -->
             <div
-                class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm mb-10">
+                class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm mb-10 break-inside-avoid">
                 <div class="flex items-center gap-3 mb-6">
                     <span class="material-symbols-outlined text-primary dark:text-white">show_chart</span>
                     <h2 class="text-xl font-bold text-primary dark:text-white">Evolución del Índice por Período</h2>
@@ -333,10 +322,13 @@
             const userInfo = JSON.parse(sessionStorage.getItem('userInfo') || '{}');
 
             // 1. Llenar Header
-            document.getElementById('userNameHeader').textContent = userInfo.name || 'Estudiante Conectado';
-            document.getElementById('userEmailHeader').textContent = userInfo.email || unphuData.matricula;
-            if (userInfo.picture) {
-                document.getElementById('userAvatarHeader').src = userInfo.picture;
+            document.getElementById('userName').textContent = userInfo.name || 'ESTUDIANTE';
+            if (unphuData.matricula) {
+                document.getElementById('userIdBox').textContent = `ID: ${unphuData.matricula.toLowerCase()}`;
+            }
+            if (userInfo.name) {
+                const initials = userInfo.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                document.getElementById('userAvatar').textContent = initials || 'U';
             }
 
             // 2. Llenar KPIs
@@ -538,7 +530,7 @@
                 const localGpa = periodEvalCredits > 0 ? (periodHonor / periodEvalCredits).toFixed(2) : 'N/A';
 
                 const periodHtml = `
-                    <div class="overflow-hidden bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm period-section">
+                    <div class="overflow-hidden bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm period-section break-inside-avoid mb-6">
                         <div class="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 dark:border-slate-800 gap-2">
                             <div class="flex items-center gap-3">
                                 <span class="material-symbols-outlined text-primary">calendar_today</span>
@@ -691,6 +683,76 @@
                     }
                 });
             });
+
+            // PDF Export logic
+            const btnExportPdf = document.getElementById('btnExportPdf');
+            if (btnExportPdf) {
+                btnExportPdf.addEventListener('click', function () {
+                    const mainElement = document.querySelector('main');
+                    const searchBar = document.querySelector('.relative.w-full.lg\\:w-96');
+                    const canvas = document.getElementById('gpaEvolutionChart');
+
+                    let originalCanvasDisplay = '';
+                    let tempImg = null;
+
+                    // Temporarily hide elements we don't want in the PDF
+                    btnExportPdf.style.display = 'none';
+                    if (searchBar) searchBar.style.display = 'none';
+
+                    // Convert Canvas to Image for perfect PDF rendering (prevents overflow and scaling bugs)
+                    if (canvas && canvas.toDataURL) {
+                        try {
+                            originalCanvasDisplay = canvas.style.display;
+
+                            // Fill background with white just in case it's transparent
+                            const ctx = canvas.getContext('2d');
+                            ctx.save();
+                            ctx.globalCompositeOperation = 'destination-over';
+                            ctx.fillStyle = '#ffffff';
+                            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                            tempImg = document.createElement('img');
+                            tempImg.src = canvas.toDataURL('image/png', 1.0);
+                            tempImg.style.width = '100%';
+                            tempImg.style.height = 'auto'; // Maintains aspect ratio
+                            tempImg.style.maxWidth = '100%';
+                            tempImg.style.display = 'block';
+
+                            canvas.style.display = 'none';
+                            canvas.parentNode.appendChild(tempImg);
+                            ctx.restore();
+                        } catch (e) { console.error('Canvas manipulation failed', e); }
+                    }
+
+                    // Use html2pdf
+                    const opt = {
+                        margin: 0.5,
+                        filename: `historial_academico_${unphuData.matricula || 'unphusist'}.pdf`,
+                        image: { type: 'jpeg', quality: 0.98 },
+                        html2canvas: { scale: 2, useCORS: true, windowWidth: document.documentElement.offsetWidth },
+                        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+                        pagebreak: { mode: 'css', avoid: '.break-inside-avoid' }
+                    };
+
+                    html2pdf().set(opt).from(mainElement).save().then(() => {
+                        // Restore elements
+                        btnExportPdf.style.display = '';
+                        if (searchBar) searchBar.style.display = '';
+                        if (canvas && tempImg && tempImg.parentNode) {
+                            canvas.style.display = originalCanvasDisplay;
+                            tempImg.parentNode.removeChild(tempImg);
+                        }
+                    }).catch(err => {
+                        console.error('Error generating PDF:', err);
+                        btnExportPdf.style.display = '';
+                        if (searchBar) searchBar.style.display = '';
+                        if (canvas && tempImg && tempImg.parentNode) {
+                            canvas.style.display = originalCanvasDisplay;
+                            tempImg.parentNode.removeChild(tempImg);
+                        }
+                    });
+                });
+            }
         });
     </script>
 </body>

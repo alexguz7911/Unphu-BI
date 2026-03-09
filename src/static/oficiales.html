@@ -75,51 +75,39 @@
 </head>
 
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
-    <!-- Top Navigation -->
-    <header
-        class="flex items-center justify-between border-b border-slate-200 bg-white px-6 lg:px-10 py-3 sticky top-0 z-50 shadow-sm">
-        <div class="flex items-center gap-4 text-primary cursor-pointer border-r border-slate-200 pr-6"
-            onclick="window.location.href='dashboard.html'">
-            <div class="size-8 flex items-center justify-center bg-primary rounded-lg text-white">
-                <span class="material-symbols-outlined text-xl">school</span>
+    <!-- Top Navigation Bar (Global Style) -->
+    <nav class="bg-[#001f3f] text-white px-8 py-3 flex justify-between items-center shadow-md relative z-50">
+        <div class="flex items-center gap-8">
+            <div class="flex items-center gap-3 font-bold text-xl tracking-wide cursor-pointer"
+                onclick="window.location.href='/'">
+                <div class="w-8 h-8 flex items-center justify-center bg-white rounded-md text-[#001f3f] font-bold font-serif"
+                    style="font-family: 'Georgia', serif;">U</div>
+                UNPHUSIST
             </div>
-            <h2 class="text-primary text-xl font-bold tracking-tight">UNPHUSIST</h2>
+            <div class="hidden md:flex gap-6 text-sm font-medium">
+                <a href="dashboard.html"
+                    class="text-[#a9b5c2] pb-1 border-b-2 border-transparent hover:text-white transition-all">Dashboard</a>
+                <a href="historial.html"
+                    class="text-[#a9b5c2] pb-1 border-b-2 border-transparent hover:text-white transition-all">Historial</a>
+                <a href="prematricula.html"
+                    class="text-[#a9b5c2] pb-1 border-b-2 border-transparent hover:text-white transition-all">Prematrícula</a>
+                <a href="oficiales.html"
+                    class="text-white pb-1 border-b-2 border-white transition-all pointer-events-none">Oficiales</a>
+            </div>
         </div>
-
-        <div class="flex flex-1 items-center justify-between pl-6">
-            <div class="relative w-full max-w-md hidden md:block">
-                <span
-                    class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
-                <input
-                    class="w-full pl-9 pr-4 py-1.5 bg-slate-100 border-none rounded-md text-sm outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                    placeholder="Buscar..." type="text" />
-            </div>
-
-            <div class="flex items-center gap-5 ml-auto">
-                <button class="text-slate-500 hover:text-primary transition-colors flex items-center">
-                    <span class="material-symbols-outlined">notifications</span>
-                </button>
-                <div class="flex items-center gap-3 pl-5 border-l border-slate-200">
-                    <div class="text-right hidden sm:block">
-                        <p class="text-sm font-bold leading-none text-slate-800" id="userNameHeader">Cargando...</p>
-                        <p class="text-[11px] text-slate-500 mt-0.5 font-medium" id="userIdHeader">--</p>
-                    </div>
-                    <div class="bg-orange-200 text-orange-800 rounded-full size-9 flex items-center justify-center font-bold text-sm"
-                        id="userAvatarHeader">
-                        U
-                    </div>
+        <div class="flex items-center gap-6">
+            <div class="flex items-center gap-3 text-right cursor-pointer" onclick="window.location.href='/'">
+                <div class="hidden sm:flex flex-col">
+                    <span class="text-sm font-semibold uppercase leading-tight" id="userName">Cargando...</span>
+                    <span class="text-xs text-[#a9b5c2] lowercase leading-tight" id="userIdBox">...</span>
                 </div>
+                <div class="w-9 h-9 flex items-center justify-center rounded-full bg-[#0f9b58] font-bold text-sm border-2 border-white/20 text-white"
+                    id="userAvatar">U</div>
             </div>
         </div>
-    </header>
+    </nav>
 
     <main class="max-w-[1240px] mx-auto w-full px-4 lg:px-8 py-8 flex-1">
-        <!-- Breadcrumb -->
-        <nav class="flex text-xs text-slate-500 font-medium mb-4 gap-2">
-            <a href="#" class="hover:text-primary">Portal</a> <span class="text-slate-300">›</span>
-            <a href="#" class="hover:text-primary">Inscripción</a> <span class="text-slate-300">›</span>
-            <span class="text-slate-800">Materias Oficiales</span>
-        </nav>
 
         <!-- Header content -->
         <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
@@ -148,6 +136,9 @@
                                 <th class="px-6 py-4">Asignatura</th>
                                 <th class="px-6 py-4">Créditos</th>
                                 <th class="px-6 py-4">Profesor</th>
+                                <th class="px-6 py-4">Horario</th>
+                                <th class="px-6 py-4">Observaciones</th>
+                                <th class="px-6 py-4">Periodo</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100" id="tableMateriasSeleccionadas">
@@ -169,14 +160,15 @@
             const unphuDataStr = sessionStorage.getItem('unphuData');
             const userName = sessionStorage.getItem('userName') || 'Estudiante';
 
-            document.getElementById('userNameHeader').textContent = userName;
-            document.getElementById('userAvatarHeader').textContent = userName[0].toUpperCase();
+            document.getElementById('userName').textContent = userName;
+            const initials = userName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+            document.getElementById('userAvatar').textContent = initials || 'U';
 
             let selectedSubjects = [];
 
             if (unphuDataStr) {
                 const unphuData = JSON.parse(unphuDataStr);
-                document.getElementById('userIdHeader').textContent = unphuData.matricula || '--';
+                document.getElementById('userIdBox').textContent = `ID: ${(unphuData.matricula || '').toLowerCase()}`;
 
                 if (unphuData.current_period && unphuData.current_period.length > 0) {
                     document.getElementById('periodoActualBadge').textContent = unphuData.current_period[0].Periodo || 'Ciclo Actual';
@@ -188,7 +180,10 @@
                         code: s.groupSubjectCode || s.codeAsignatura || s.codeSubject || s.code || s.Asignatura || 'N/A',
                         name: s.subjectName || s.descripcion || s.subject || s.name || s.Descripcion || 'Materia',
                         credits: parseInt(s.credits) || parseInt(s.creditos) || parseInt(s.Creditos) || 0,
-                        prof: s.teacher || s.profesor || s.professor || s.Profesor || 'Profesor Asignado',
+                        prof: s.teacher || s.profesor || s.professor || s.Profesor || '',
+                        horario: s.schedule || s.horario || s.Horario || '',
+                        observaciones: s.observations || s.observaciones || s.Observaciones || 'AP',
+                        periodo: s.period || s.periodo || s.Periodo || s.ciclo || s.Ciclo || '',
                         type: 'Presencial'
                     }));
                 } else {
@@ -202,7 +197,7 @@
             if (selectedSubjects.length === 0) {
                 tableTbody.innerHTML = `
                     <tr>
-                        <td colspan="4" class="px-6 py-10 text-center text-slate-500 font-medium">No tienes asignaturas oficiales listadas para el ciclo actual.</td>
+                        <td colspan="7" class="px-6 py-10 text-center text-slate-500 font-medium">No tienes asignaturas oficiales listadas para el ciclo actual.</td>
                     </tr>
                 `;
             } else {
@@ -213,13 +208,13 @@
                     // Table row
                     tableTbody.innerHTML += `
                         <tr class="hover:bg-slate-50 transition-colors group">
-                            <td class="px-6 py-4 font-bold text-primary text-xs">${sub.code}</td>
-                            <td class="px-6 py-4">
-                                <p class="font-bold text-slate-800">${sub.name}</p>
-                                <p class="text-[10px] text-slate-400 font-medium italic mt-0.5">${sub.type || ''}</p>
-                            </td>
-                            <td class="px-6 py-4 text-slate-600">${sub.credits}</td>
-                            <td class="px-6 py-4 text-slate-600">${sub.prof}</td>
+                            <td class="px-6 py-4 text-slate-600 text-sm whitespace-nowrap">${sub.code}</td>
+                            <td class="px-6 py-4 text-slate-600 text-sm">${sub.name}</td>
+                            <td class="px-6 py-4 text-slate-600 text-sm">${sub.credits}</td>
+                            <td class="px-6 py-4 text-slate-600 text-sm">${sub.prof}</td>
+                            <td class="px-6 py-4 text-slate-600 text-sm whitespace-pre-wrap max-w-[250px] leading-relaxed">${sub.horario}</td>
+                            <td class="px-6 py-4 text-slate-600 text-sm">${sub.observaciones}</td>
+                            <td class="px-6 py-4 text-slate-600 text-sm">${sub.periodo}</td>
                         </tr>
                     `;
                 });

@@ -790,9 +790,6 @@
             </div>
         </div>
         <div class="nav-right">
-            <div class="search-container">
-                <input type="text" placeholder="Buscar reporte...">
-            </div>
             <div class="user-profile">
                 <div class="user-info-text">
                     <span class="user-name" id="userName">Ana López</span>
@@ -812,18 +809,6 @@
                 <p>Módulo de Inteligencia y Soporte de Decisiones (BI/DSS)</p>
             </div>
             <div class="header-actions">
-                <button class="btn btn-outline">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
-                    </svg>
-                    Exportar Reporte
-                </button>
-                <button class="btn btn-primary">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 2v6h-6M3 12a9 9 0 1 0 2.5-6L2 9M21 12a9 9 0 0 0-14.5-7" />
-                    </svg>
-                    Actualizar Datos
-                </button>
             </div>
         </div>
 
@@ -879,10 +864,11 @@
                     </div>
                     <div class="legend-area">
                         <div class="legend-item">
-                            <div class="legend-dot dot-blue"></div> Mi Índice (3.2)
+                            <div class="legend-dot dot-blue"></div> Mi Índice <span id="legendMiIndiceTxt"></span>
                         </div>
                         <div class="legend-item">
-                            <div class="legend-dot dot-green"></div> Promedio Carrera (2.9)
+                            <div class="legend-dot dot-green"></div> Promedio Carrera <span
+                                id="legendPromedioCarreraTxt"></span>
                         </div>
                     </div>
                 </div>
@@ -949,7 +935,7 @@
                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                         <circle cx="12" cy="12" r="3" />
                     </svg>
-                    Ver Mapa de Correquisitos
+                    Ver Mapa de Prerrequisitos
                 </button>
             </div>
         </div>
@@ -970,15 +956,24 @@
                 </div>
             </div>
 
-            <!-- Sugeridas -->
+            <!-- Sugeridas / Carga Académica -->
             <div class="card sugeridas-card">
-                <div class="card-header" style="margin-bottom: 0.5rem;">
+                <div class="card-header"
+                    style="margin-bottom: 0.5rem; flex-wrap: wrap; gap: 10px; justify-content: space-between;">
                     <div class="card-title" style="font-size: 1rem; color: var(--primary-dark);">
                         <svg viewBox="0 0 24 24" style="fill: var(--primary-green); width: 22px; height: 22px;">
                             <path
                                 d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z" />
                         </svg>
-                        Materias Pendientes / Sugeridas
+                        Sugeridor de Carga Académica
+                    </div>
+                    <div>
+                        <select id="cargaAcademicaSelect"
+                            style="padding: 0.3rem 0.5rem; border-radius: 6px; border: 1px solid var(--border-color); font-size: 0.8rem; outline: none; background: white; cursor: pointer; color: var(--text-main); font-weight: 500;">
+                            <option value="12">Ligera (Max 12 Créditos)</option>
+                            <option value="16" selected>Normal (Max 16 Créditos)</option>
+                            <option value="22">Completa (Max 22 Créditos)</option>
+                        </select>
                     </div>
                 </div>
 
@@ -1018,7 +1013,7 @@
                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                     <circle cx="12" cy="12" r="3" />
                 </svg>
-                Mapa de Correquisitos y Ruta Crítica
+                Mapa de Prerrequisitos y Ruta Crítica
             </h2>
             <div id="mermaidRenderArea"
                 style="width:100%; text-align:center; min-height: 300px; overflow: auto; display: flex; justify-content: center;">
@@ -1079,12 +1074,17 @@
                             const descMaterias = materiasFaltantesCount === 1 ? "Materia" : "Materias";
                             document.getElementById('materiasFaltantesTxt').textContent = materiasFaltantesCount + " " + descMaterias;
 
-                            // Insertar creditos en curso reales
-                            if (stats.creditosEnCurso !== undefined) {
-                                document.getElementById('creditosEnCursoCard').textContent = stats.creditosEnCurso;
-                            } else {
-                                document.getElementById('creditosEnCursoCard').textContent = "0";
+                            // Insertar creditos en curso reales (basado en materias oficiales matriculadas)
+                            let creditosEnCursoReales = 0;
+                            if (unphuData.registered_subjects && unphuData.registered_subjects.length > 0) {
+                                creditosEnCursoReales = unphuData.registered_subjects.reduce((sum, s) => {
+                                    const credits = parseInt(s.credits) || parseInt(s.creditos) || parseInt(s.Creditos) || 0;
+                                    return sum + credits;
+                                }, 0);
+                            } else if (stats.creditosEnCurso !== undefined) {
+                                creditosEnCursoReales = stats.creditosEnCurso;
                             }
+                            document.getElementById('creditosEnCursoCard').textContent = creditosEnCursoReales;
 
                             if (stats.totalCreditos > 0) {
                                 const porcentaje = Math.round((creditosAprobadosReales / stats.totalCreditos) * 100);
@@ -1125,30 +1125,122 @@
                             }
                         }
 
-                        // Poblar Materias Pendientes Dinámicamente
+                        // Poblar Materias Pendientes Dinámicamente (Sugeridor)
                         if (unphuData.pending_subjects) {
                             const sugeridasContainer = document.getElementById('dynamicSugeridasContainer');
-                            sugeridasContainer.innerHTML = ''; // Clear fallback
+                            const selectCarga = document.getElementById('cargaAcademicaSelect');
 
-                            if (unphuData.pending_subjects.length === 0) {
-                                sugeridasContainer.innerHTML = `
-                                    <div class="sugerida-item">
-                                        <span class="sugerida-name">¡Todo el pensum completado!</span>
-                                        <span class="badge-sug green">Graduación</span>
-                                    </div>`;
-                            } else {
-                                unphuData.pending_subjects.forEach(subject => {
+                            const renderSugerencias = () => {
+                                sugeridasContainer.innerHTML = ''; // Clear fallback
+
+                                if (unphuData.pending_subjects.length === 0) {
+                                    sugeridasContainer.innerHTML = `
+                                        <div class="sugerida-item">
+                                            <span class="sugerida-name">¡Todo el pensum completado!</span>
+                                            <span class="badge-sug green">Graduación</span>
+                                        </div>`;
+                                    return;
+                                }
+
+                                const maxCreditos = parseInt(selectCarga.value) || 16;
+                                let creditosActuales = 0;
+                                let materiasSugeridas = [];
+                                let materiasOcultas = [];
+
+                                // Ordenar por proridad: Mayor unlocks primero
+                                const sortedSubjects = [...unphuData.pending_subjects].sort((a, b) => {
+                                    const uA = a.unlocks || 0;
+                                    const uB = b.unlocks || 0;
+                                    return uB - uA; // Descendente
+                                });
+
+                                sortedSubjects.forEach(subject => {
+                                    if (creditosActuales + subject.credits <= maxCreditos) {
+                                        materiasSugeridas.push(subject);
+                                        creditosActuales += subject.credits;
+                                    } else {
+                                        materiasOcultas.push(subject);
+                                    }
+                                });
+
+                                // Si por alguna razón ninguna entra por créditos (ej. materia de 20 cred y límite 12, poco probable pero posible)
+                                if (materiasSugeridas.length === 0 && sortedSubjects.length > 0) {
+                                    materiasSugeridas.push(sortedSubjects[0]);
+                                    creditosActuales += sortedSubjects[0].credits;
+                                    materiasOcultas = sortedSubjects.slice(1);
+                                }
+
+                                // Render Sugeridas (Las que entran en la carga)
+                                materiasSugeridas.forEach((subject) => {
                                     const item = document.createElement('div');
                                     item.className = 'sugerida-item';
 
                                     const codeTrunc = subject.code.split('/')[0].trim();
+                                    const alertaPrioridad = (subject.unlocks && subject.unlocks > 0)
+                                        ? `<span class="badge-sug yellow" style="margin-left: 5px; font-size: 0.6rem;" title="Abre ${subject.unlocks} materia(s)">LLAVE</span>` : '';
+
                                     item.innerHTML = `
-                                        <span class="sugerida-name" title="${subject.name}">${subject.name} (${codeTrunc})</span>
+                                        <span class="sugerida-name" title="${subject.name}">${subject.name} (${codeTrunc}) ${alertaPrioridad}</span>
                                         <span class="badge-sug blue">${subject.credits} Créditos</span>
                                     `;
                                     sugeridasContainer.appendChild(item);
                                 });
-                            }
+
+                                // Generar sumario
+                                const sumario = document.createElement('div');
+                                sumario.style.marginTop = '0.8rem';
+                                sumario.style.paddingTop = '0.8rem';
+                                sumario.style.borderTop = '1px dashed var(--border-color)';
+                                sumario.style.display = 'flex';
+                                sumario.style.justifyContent = 'space-between';
+                                sumario.style.fontSize = '0.85rem';
+                                sumario.style.fontWeight = 'bold';
+                                sumario.style.color = 'var(--text-main)';
+                                sumario.innerHTML = `<span>Créditos de esta carga:</span> <span style="color: var(--primary-green);">${creditosActuales} / ${maxCreditos}</span>`;
+                                sugeridasContainer.appendChild(sumario);
+
+                                // Botón para ver el resto
+                                if (materiasOcultas.length > 0) {
+                                    const btnContainer = document.createElement('div');
+                                    btnContainer.style.marginTop = '0.8rem';
+
+                                    const btn = document.createElement('button');
+                                    btn.className = 'view-map-btn';
+                                    btn.innerHTML = `Ver materias restantes (${materiasOcultas.length})`;
+
+                                    const containerOcultas = document.createElement('div');
+                                    containerOcultas.style.display = 'none';
+                                    containerOcultas.style.flexDirection = 'column';
+                                    containerOcultas.style.marginTop = '0.5rem';
+
+                                    materiasOcultas.forEach(subject => {
+                                        const item = document.createElement('div');
+                                        item.className = 'sugerida-item';
+                                        item.style.opacity = '0.6';
+                                        const codeTrunc = subject.code.split('/')[0].trim();
+                                        item.innerHTML = `
+                                            <span class="sugerida-name" title="${subject.name}">${subject.name} (${codeTrunc})</span>
+                                            <span class="badge-sug blue" style="background: transparent; border: 1px solid #ccc; color: #888;">${subject.credits} Créditos</span>
+                                        `;
+                                        containerOcultas.appendChild(item);
+                                    });
+
+                                    btn.addEventListener('click', () => {
+                                        containerOcultas.style.display = 'flex';
+                                        btnContainer.style.display = 'none';
+                                    });
+
+                                    btnContainer.appendChild(btn);
+                                    sugeridasContainer.appendChild(btnContainer);
+                                    sugeridasContainer.appendChild(containerOcultas);
+                                }
+                            };
+
+                            // Render initial
+                            renderSugerencias();
+
+                            // Attach listener
+                            selectCarga.addEventListener('change', renderSugerencias);
                         }
 
                         if (unphuData.indices) {
@@ -1157,6 +1249,14 @@
                             if (cuIndex && cuIndex > 0) {
                                 document.getElementById('indiceAcumuladoVal').textContent = cuIndex.toFixed(2);
 
+                                // Update Legend
+                                const legendIdx = document.getElementById('legendMiIndiceTxt');
+                                if (legendIdx) legendIdx.textContent = `(${cuIndex.toFixed(2)})`;
+
+                                const promedioCarrera = (unphuData.ranking && unphuData.ranking.average) ? unphuData.ranking.average : 2.53;
+                                const legendProm = document.getElementById('legendPromedioCarreraTxt');
+                                if (legendProm) legendProm.textContent = `(${promedioCarrera.toFixed(2)})`;
+
                                 // Update chart
                                 const maxIndex = 4.0;
                                 const barHtmlFill = document.getElementById('indexBarFill');
@@ -1164,9 +1264,17 @@
                                 barHtmlFill.style.width = percentFill + "%";
                                 barHtmlFill.textContent = cuIndex.toFixed(2);
 
-                                // The rest of the bar until the career avg (mock 2.9 here as relative gap, simplified)
+                                // The rest of the bar up to 4.0
                                 const remainingEmpty = 100 - percentFill;
-                                document.getElementById('indexBarEmpty').style.width = remainingEmpty + "%";
+                                const barHtmlEmpty = document.getElementById('indexBarEmpty');
+                                barHtmlEmpty.style.width = remainingEmpty + "%";
+
+                                // Show average gap visually
+                                barHtmlEmpty.style.borderLeft = "2px solid var(--primary-green)";
+                                barHtmlEmpty.style.position = "relative";
+                                // The position of the average line relative to the full bar
+                                const percentAvg = Math.min((promedioCarrera / maxIndex) * 100, 100);
+                                // Set a tiny marker or just leave the border as the max. Alternatively, don't mess with complex CSS and just leave it simple as requested by putting the text in the legend.
 
                                 // Calcular y pintar la Tendencia (Index actual vs Index anterior 2.50)
                                 const lastIndex = 2.50;
