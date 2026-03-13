@@ -116,8 +116,11 @@ def auth_google():
                 api_data['registered_subjects'] = enrolled
                 api_data['selected_subjects'] = selected
                 
+        # 4. Sincronización Base hacia PostgreSQL de forma síncrona 
+        # (Vercel Serverless congela los hilos en background, así que esto debe ser síncrono para el ranking)
+        DataWareHouseSync.sync_student_login(api_data, matricula, nombre, str(id_carrera))
+        
         # Sincronización PROFUNDA hacia PostgreSQL usando un Worker Thread en 2do plano
-        # Esto extraerá toda la historia sin bloquear el inicio de sesión del estudiante.
         from src.api.services.background_worker import enqueue_student_sync
         enqueue_student_sync(str(id_persona), str(id_carrera), matricula, nombre, api_data)
         
