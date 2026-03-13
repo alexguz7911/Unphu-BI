@@ -771,6 +771,136 @@
         .footer-links a:hover {
             color: var(--primary-blue);
         }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 992px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .bottom-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                gap: 1rem;
+                padding: 1rem;
+            }
+
+            .nav-left {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .nav-links {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 1rem;
+            }
+
+            .nav-right {
+                width: 100%;
+                justify-content: space-between;
+                flex-wrap: wrap;
+                margin-top: 0.5rem;
+            }
+
+            .search-container {
+                order: 2;
+                width: 100%;
+                margin-top: 0.5rem;
+            }
+
+            .search-container input {
+                width: 100%;
+            }
+
+            .user-profile {
+                order: 1;
+                margin: 0 auto;
+            }
+
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .header-actions {
+                width: 100%;
+                flex-wrap: wrap;
+            }
+
+            .btn {
+                flex: 1;
+                justify-content: center;
+                text-align: center;
+            }
+
+            .progress-circle {
+                width: 150px;
+                height: 150px;
+            }
+
+            .progress-inner {
+                width: 120px;
+                height: 120px;
+            }
+
+            .progress-inner h2 {
+                font-size: 2rem;
+            }
+
+            .card-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.8rem;
+            }
+
+            .legend-area {
+                width: 100%;
+                flex-wrap: wrap;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-row {
+                grid-template-columns: 1fr;
+                gap: 0.8rem;
+            }
+
+            .user-info-text {
+                display: none;
+            }
+
+            .page-footer {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+                gap: 1rem;
+            }
+
+            .footer-links {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .creditos-card {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
     </style>
 </head>
 
@@ -1052,25 +1182,26 @@
 
                         if (unphuData.stats) {
                             const stats = unphuData.stats;
+                            const totalCreditosSeguro = stats.totalCreditos || 0;
 
                             // Calcular pendientes de manera infalible sumando los créditos de las materias faltantes en tiempo real
                             let pendientesReales = 0;
-                            if (unphuData.pending_subjects && unphuData.pending_subjects.length > 0) {
-                                pendientesReales = unphuData.pending_subjects.reduce((acc, item) => acc + item.credits, 0);
+                            if (Array.isArray(unphuData.pending_subjects)) {
+                                pendientesReales = unphuData.pending_subjects.reduce((acc, item) => acc + (parseInt(item.credits) || parseInt(item.creditos) || parseInt(item.Creditos) || 0), 0);
                             } else {
-                                pendientesReales = Math.max(0, stats.creditosPendientes); // Respaldo if pending list not present
+                                pendientesReales = Math.max(0, stats.creditosPendientes || 0); // Respaldo if pending list not present
                             }
 
                             // Asegurarse de que el aprobado total tenga sentido con respecto al pensum  
-                            let creditosAprobadosReales = stats.creditosAprobados;
-                            if (pendientesReales > 0 && (stats.totalCreditos - pendientesReales) > creditosAprobadosReales) {
-                                creditosAprobadosReales = stats.totalCreditos - pendientesReales;
+                            let creditosAprobadosReales = stats.creditosAprobados || 0;
+                            if (pendientesReales >= 0 && totalCreditosSeguro > 0 && (totalCreditosSeguro - pendientesReales) > creditosAprobadosReales) {
+                                creditosAprobadosReales = totalCreditosSeguro - pendientesReales;
                             }
 
                             document.getElementById('creditosAprobados').textContent = creditosAprobadosReales;
                             document.getElementById('creditosPendientesCard').textContent = pendientesReales;
 
-                            const materiasFaltantesCount = unphuData.pending_subjects ? unphuData.pending_subjects.length : 0;
+                            const materiasFaltantesCount = Array.isArray(unphuData.pending_subjects) ? unphuData.pending_subjects.length : 0;
                             const descMaterias = materiasFaltantesCount === 1 ? "Materia" : "Materias";
                             document.getElementById('materiasFaltantesTxt').textContent = materiasFaltantesCount + " " + descMaterias;
 
@@ -1082,7 +1213,7 @@
                                     return sum + credits;
                                 }, 0);
                             } else if (stats.creditosEnCurso !== undefined) {
-                                creditosEnCursoReales = stats.creditosEnCurso;
+                                creditosEnCursoReales = stats.creditosEnCurso || 0;
                             }
                             document.getElementById('creditosEnCursoCard').textContent = creditosEnCursoReales;
 

@@ -196,18 +196,20 @@ class DataWareHouseSync:
                 )
                 SELECT 
                     (SELECT Posicion FROM CTE_Ranked WHERE Matricula = ?) as RankEstudiante,
-                    (SELECT COUNT(*) FROM CTE_Ranked) as TotalEstudiantes
+                    (SELECT COUNT(*) FROM CTE_Ranked) as TotalEstudiantes,
+                    (SELECT AVG(CAST(IndiceTotal as FLOAT)) FROM CTE_Ranked) as PromedioCarrera
             """
             cursor.execute(query, (matricula, matricula))
             row = cursor.fetchone()
             
             if row and row.RankEstudiante and row.TotalEstudiantes:
-                return {"rank": row.RankEstudiante, "total": row.TotalEstudiantes}
+                promedio = round(row.PromedioCarrera, 2) if row.PromedioCarrera else 2.53
+                return {"rank": row.RankEstudiante, "total": row.TotalEstudiantes, "average": promedio}
             else:
-                return {"rank": "--", "total": "--"}
+                return {"rank": "--", "total": "--", "average": 2.53}
         except Exception as e:
             print(f"❌ Error getting student ranking from DW SQL: {e}")
-            return {"rank": "--", "total": "--"}
+            return {"rank": "--", "total": "--", "average": 2.53}
         finally:
             if 'cursor' in locals() and cursor:
                 cursor.close()
