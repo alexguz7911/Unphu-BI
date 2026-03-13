@@ -1405,6 +1405,28 @@
 
                                 // Show average gap visually with an absolute marker independent of user index
                                 const percentAvg = Math.min((promedioCarrera / maxIndex) * 100, 100);
+
+                                // Draw a solid Green Bar if Average is higher than the user's index (filling the gap)
+                                let avgBar = document.getElementById('avgBarGap');
+                                if (!avgBar) {
+                                    avgBar = document.createElement('div');
+                                    avgBar.id = 'avgBarGap';
+                                    avgBar.style.position = 'absolute';
+                                    avgBar.style.top = '0';
+                                    avgBar.style.bottom = '0';
+                                    avgBar.style.backgroundColor = 'var(--primary-green)';
+                                    avgBar.style.zIndex = '5';
+                                    avgBar.style.opacity = '0.85'; // Slight opacity to distinguish it visually
+                                    document.querySelector('.bar-wrapper').appendChild(avgBar);
+                                }
+                                if (percentAvg > percentFill) {
+                                    avgBar.style.display = 'block';
+                                    avgBar.style.left = `${percentFill}%`;
+                                    avgBar.style.width = `${percentAvg - percentFill}%`;
+                                } else {
+                                    avgBar.style.display = 'none';
+                                }
+
                                 let avgMarker = document.getElementById('avgMarkerLine');
                                 if (!avgMarker) {
                                     avgMarker = document.createElement('div');
