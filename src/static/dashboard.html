@@ -1392,7 +1392,8 @@
                                 const barHtmlFill = document.getElementById('indexBarFill');
                                 const percentFill = Math.min((cuIndex / maxIndex) * 100, 100);
                                 barHtmlFill.style.width = percentFill + "%";
-                                barHtmlFill.textContent = cuIndex.toFixed(2);
+                                // Wrap text in a span with higher z-index and same background so the green marker passes UNDER it
+                                barHtmlFill.innerHTML = `<span style="position: relative; z-index: 20; background: var(--primary-blue); padding: 0 4px; border-radius: 4px;">${cuIndex.toFixed(2)}</span>`;
 
                                 // The rest of the bar up to 4.0
                                 const remainingEmpty = 100 - percentFill;
