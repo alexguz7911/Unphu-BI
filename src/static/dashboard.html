@@ -1399,12 +1399,24 @@
                                 const barHtmlEmpty = document.getElementById('indexBarEmpty');
                                 barHtmlEmpty.style.width = remainingEmpty + "%";
 
-                                // Show average gap visually
-                                barHtmlEmpty.style.borderLeft = "2px solid var(--primary-green)";
-                                barHtmlEmpty.style.position = "relative";
-                                // The position of the average line relative to the full bar
+                                // Remove old border logic
+                                barHtmlEmpty.style.borderLeft = "none";
+
+                                // Show average gap visually with an absolute marker independent of user index
                                 const percentAvg = Math.min((promedioCarrera / maxIndex) * 100, 100);
-                                // Set a tiny marker or just leave the border as the max. Alternatively, don't mess with complex CSS and just leave it simple as requested by putting the text in the legend.
+                                let avgMarker = document.getElementById('avgMarkerLine');
+                                if (!avgMarker) {
+                                    avgMarker = document.createElement('div');
+                                    avgMarker.id = 'avgMarkerLine';
+                                    avgMarker.style.position = 'absolute';
+                                    avgMarker.style.top = '0';
+                                    avgMarker.style.bottom = '0';
+                                    avgMarker.style.width = '3px';
+                                    avgMarker.style.backgroundColor = 'var(--primary-green)';
+                                    avgMarker.style.zIndex = '10';
+                                    document.querySelector('.bar-wrapper').appendChild(avgMarker);
+                                }
+                                avgMarker.style.left = `calc(${percentAvg}% - 1.5px)`;
 
                                 // Calcular y pintar la Tendencia (Index actual vs Index anterior 2.50)
                                 const lastIndex = 2.50;

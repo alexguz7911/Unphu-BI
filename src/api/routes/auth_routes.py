@@ -116,9 +116,10 @@ def auth_google():
                 api_data['registered_subjects'] = enrolled
                 api_data['selected_subjects'] = selected
                 
-        # Sincronizar hacia nuestro Base de Datos / Data Warehouse 
-        # (Ejecutar en background thread idealmente en el futuro)
-        DataWareHouseSync.sync_student_login(api_data, matricula, nombre)
+        # Sincronización PROFUNDA hacia PostgreSQL usando un Worker Thread en 2do plano
+        # Esto extraerá toda la historia sin bloquear el inicio de sesión del estudiante.
+        from src.api.services.background_worker import enqueue_student_sync
+        enqueue_student_sync(str(id_persona), str(id_carrera), matricula, nombre, api_data)
         
         # Calcular ranking del DW y añadir a la data para la GUI
         api_data['ranking'] = DataWareHouseSync.get_student_ranking(matricula)

@@ -1,29 +1,24 @@
 from typing import Optional, Any
-from src.config.settings import SQL_SERVER_CONFIG
+from src.config.settings import POSTGRES_CONFIG
 
 class DBConnection:
-    """Maneja la conexión a SQL Server usando pyodbc."""
+    """Maneja la conexión a PostgreSQL usando psycopg2."""
     
     @staticmethod
     def get_connection() -> Optional[Any]:
         try:
-            import pyodbc # Import local para no crashear Vercel si falla la lib C++
-            conn_str = (
-                f"DRIVER={{{SQL_SERVER_CONFIG['driver']}}};"
-                f"SERVER={SQL_SERVER_CONFIG['server']};"
-                f"DATABASE={SQL_SERVER_CONFIG['database']};"
-            )
+            import psycopg2 # Import local
             
-            # Autenticación Integrada (Windows Auth) vs SQL Server Auth
-            if SQL_SERVER_CONFIG.get('trusted_connection'):
-                conn_str += "Trusted_Connection=yes;"
-            else:
-                conn_str += f"UID={SQL_SERVER_CONFIG['username']};PWD={SQL_SERVER_CONFIG['password']};"
-                
-            return pyodbc.connect(conn_str)
+            return psycopg2.connect(
+                host=POSTGRES_CONFIG['host'],
+                database=POSTGRES_CONFIG['database'],
+                user=POSTGRES_CONFIG['user'],
+                password=POSTGRES_CONFIG['password'],
+                port=POSTGRES_CONFIG['port']
+            )
         except ImportError:
-            print("❌ PyODBC no está instalado o no es compatible con este SO (ej: Vercel).")
+            print("❌ psycopg2 no está instalado. Ejecuta: pip install psycopg2-binary")
             return None
         except Exception as e:
-            print(f"❌ Error conectando a SQL Server: {e}")
+            print(f"❌ Error conectando a PostgreSQL: {e}")
             return None
