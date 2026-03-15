@@ -244,8 +244,8 @@ class DataWareHouseSync:
                     FROM Dim_Estudiante E
                     JOIN Fact_Calificaciones F ON E.IdPersona = F.IdPersona
                     JOIN Dim_Carrera C_F ON F.IdCarrera = C_F.IdCarrera
-                    WHERE C_F.NombreCarrera = (
-                        SELECT C.NombreCarrera 
+                    WHERE TRIM(UPPER(C_F.NombreCarrera)) = (
+                        SELECT TRIM(UPPER(C.NombreCarrera))
                         FROM Dim_Estudiante E2
                         JOIN Dim_Carrera C ON E2.IdCarreraActiva = C.IdCarrera
                         WHERE E2.Matricula = %s LIMIT 1

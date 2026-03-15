@@ -7,14 +7,18 @@ class DBConnection:
     
     @staticmethod
     def get_connection() -> Optional[Any]:
-        try:
-            import psycopg2 # Import local
-            
-            # Vercel and other cloud providers usually give a POSTGRES_URL or DATABASE_URL connection string directly
-            env_url = os.getenv('POSTGRES_URL') or os.getenv('DATABASE_URL')
-            if env_url:
+        import psycopg2 # Import local
+        
+        # 1. Intentar con URL de entorno (Cloud / Docker)
+        env_url = os.getenv('POSTGRES_URL') or os.getenv('DATABASE_URL')
+        if env_url:
+            try:
                 return psycopg2.connect(env_url)
-                
+            except Exception as e:
+                print(f"⚠️ Falló conexión por URL de entorno, reintentando con config local... ({e})")
+
+        # 2. Fallback o Principal: Configuración Local (Settings)
+        try:
             return psycopg2.connect(
                 host=POSTGRES_CONFIG['host'],
                 database=POSTGRES_CONFIG['database'],
@@ -22,9 +26,6 @@ class DBConnection:
                 password=POSTGRES_CONFIG['password'],
                 port=POSTGRES_CONFIG['port']
             )
-        except ImportError:
-            print("❌ psycopg2 no está instalado. Ejecuta: pip install psycopg2-binary")
-            return None
         except Exception as e:
-            print(f"❌ Error conectando a PostgreSQL: {e}")
+            print(f"❌ Error final conectando a PostgreSQL (Local Config): {e}")
             return None
