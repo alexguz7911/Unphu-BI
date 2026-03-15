@@ -61,12 +61,12 @@ class DataWareHouseSync:
             if real_id_carrera and str(real_id_carrera).isdigit():
                 id_carrera = int(real_id_carrera)
             else:
-                id_carrera = hash(carrera_full) % 100000 # Demo ID
+                id_carrera = hash(carrera_full) % 10000000 # Rango mayor para evitar colisiones
             
             cursor.execute("""
                 INSERT INTO Dim_Carrera (IdCarrera, NombreCarrera) 
                 VALUES (%s, %s)
-                ON CONFLICT (IdCarrera) DO NOTHING;
+                ON CONFLICT (IdCarrera) DO UPDATE SET NombreCarrera = EXCLUDED.NombreCarrera;
             """, (id_carrera, carrera_full))
             
             
