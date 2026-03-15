@@ -323,7 +323,9 @@
                 .then(res => res.json())
                 .then(data => {
                     if (data.error) {
-                        alert("ERROR: " + data.error);
+                        let msg = data.error;
+                        if (data.traceback) msg += "\n\nDETALLES TÉCNICOS:\n" + data.traceback;
+                        alert("ERROR: " + msg);
                     } else {
                         // Guardar nombre y datos de UNPHU en sesión temporal
                         sessionStorage.setItem('userName', data.name);

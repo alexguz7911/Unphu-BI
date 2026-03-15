@@ -20,9 +20,9 @@ def create_app() -> Flask:
     app.register_blueprint(static_bp)
     app.register_blueprint(auth_bp)
     
-    # Iniciar procesos asíncronos en segundo plano
-    from src.api.services.background_worker import start_worker
-    start_worker()
+    # Iniciar procesos asíncronos en segundo plano (Desactivado para Vercel)
+    # from src.api.services.background_worker import start_worker
+    # start_worker()
     
     return app
 

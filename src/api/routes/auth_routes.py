@@ -66,5 +66,10 @@ def auth_google():
         return jsonify({"error": "Token de Google inválido o expirado", "details": str(e)}), 401
     except Exception as e:
         import traceback
-        traceback.print_exc()
-        return jsonify({"error": "Error interno del servidor", "details": str(e)}), 500
+        error_details = traceback.format_exc()
+        print(f"[FATAL] {error_details}")
+        return jsonify({
+            "error": "Error interno del servidor", 
+            "details": str(e),
+            "traceback": error_details
+        }), 500
