@@ -139,8 +139,16 @@ class DataWareHouseSync:
                         VALUES (%s, %s, %s, 'Seleccionada')
                     """, (id_persona_real, id_periodo_actual, id_asig))
 
+            # 4. LIMPIEZA / MIGRACIÓN: Asegurar que TODAS las calificaciones históricas del estudiante
+            # estén asociadas a su carrera activa actual (Resuelve colisiones de IDs antiguos)
+            cursor.execute("""
+                UPDATE Fact_Calificaciones 
+                SET IdCarrera = %s 
+                WHERE IdPersona = %s;
+            """, (id_carrera, id_persona_real))
+
             conn.commit()
-            print(f"✅ Sincronización base (Profile/Current) exitosa en PostgreSQL para el estudiante: {raw_matricula}")
+            print(f"✅ Sincronización base y corrección de carrera exitosa para: {raw_matricula}")
         except Exception as e:
             conn.rollback()
             print(f"❌ Error durante sincronización DW PostgreSQL: {e}")
