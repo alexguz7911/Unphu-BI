@@ -325,15 +325,15 @@
             }
 
             const unphuData = JSON.parse(unphuDataStr);
-            const userInfo = JSON.parse(sessionStorage.getItem('userInfo') || '{}');
+            const userName = sessionStorage.getItem('userName') || 'Estudiante';
 
             // 1. Llenar Header
-            document.getElementById('userName').textContent = userInfo.name || 'ESTUDIANTE';
+            document.getElementById('userName').textContent = userName;
             if (unphuData.matricula) {
                 document.getElementById('userIdBox').textContent = `ID: ${unphuData.matricula.toLowerCase()}`;
             }
-            if (userInfo.name) {
-                const initials = userInfo.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+            if (userName !== 'Estudiante') {
+                const initials = userName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
                 document.getElementById('userAvatar').textContent = initials || 'U';
             }
 
