@@ -12,6 +12,7 @@
         rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
         rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script id="tailwind-config">
         tailwind.config = {
@@ -126,6 +127,13 @@
         <!-- Layout -->
         <div class="max-w-4xl mx-auto space-y-6">
 
+            <!-- Chart Card -->
+            <div class="bg-white rounded-xl border border-slate-200 shadow-soft overflow-hidden p-6 hidden"
+                id="chartCardContainer">
+                <h2 class="font-bold text-slate-800 mb-4">Créditos por Asignatura</h2>
+                <canvas id="creditosOficialesChart" height="100"></canvas>
+            </div>
+
             <!-- Table Card -->
             <div class="bg-white rounded-xl border border-slate-200 shadow-soft overflow-hidden">
                 <div class="px-6 py-4 flex justify-between items-center border-b border-slate-100">
@@ -179,9 +187,16 @@
                     document.getElementById('periodoActualBadge').textContent = unphuData.current_period[0].Periodo || 'Ciclo Actual';
                 }
 
-                // Utilizar data de materias matriculadas oficialmente
+                // Utilizar data de materias matriculadas oficialmente, o rellenar con las seleccionadas si la unphu las manda por ese endpoint
+                let rawList = [];
                 if (unphuData.registered_subjects && unphuData.registered_subjects.length > 0) {
-                    selectedSubjects = unphuData.registered_subjects.map(s => ({
+                    rawList = unphuData.registered_subjects;
+                } else if (unphuData.selected_subjects && unphuData.selected_subjects.length > 0) {
+                    rawList = unphuData.selected_subjects;
+                }
+
+                if (rawList.length > 0) {
+                    selectedSubjects = rawList.map(s => ({
                         code: s.groupSubjectCode || s.codeAsignatura || s.codeSubject || s.code || s.Asignatura || 'N/A',
                         name: s.subjectName || s.descripcion || s.subject || s.name || s.Descripcion || 'Materia',
                         credits: parseInt(s.credits) || parseInt(s.creditos) || parseInt(s.Creditos) || 0,
@@ -192,7 +207,7 @@
                         type: 'Presencial'
                     }));
                 } else {
-                    selectedSubjects = []; // Si no retornar nada, no poner datos falsos
+                    selectedSubjects = [];
                 }
             }
 
@@ -225,6 +240,55 @@
                 });
 
                 document.getElementById('totalCreditosSeleccion').textContent = totalCredits;
+
+                // Dibujar Gráfica de Barras si hay materias
+                if (selectedSubjects.length > 0) {
+                    document.getElementById('chartCardContainer').classList.remove('hidden');
+                    const ctx = document.getElementById('creditosOficialesChart').getContext('2d');
+
+                    // Ordenar materias de mayor a menor crédito para el gráfico
+                    const sortedForChart = [...selectedSubjects].sort((a, b) => b.credits - a.credits);
+
+                    const labels = sortedForChart.map(s => s.code);
+                    const data = sortedForChart.map(s => s.credits);
+
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Cantidad de Créditos',
+                                data: data,
+                                backgroundColor: '#0f9d58',
+                                borderRadius: 6,
+                                hoverBackgroundColor: '#002b5e'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        stepSize: 1
+                                    }
+                                }
+                            },
+                            plugins: {
+                                tooltip: {
+                                    callbacks: {
+                                        title: function (context) {
+                                            return sortedForChart[context[0].dataIndex].name;
+                                        }
+                                    }
+                                },
+                                legend: {
+                                    display: false
+                                }
+                            }
+                        }
+                    });
+                }
             }
         });
     </script>

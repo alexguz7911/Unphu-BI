@@ -243,8 +243,9 @@ class DataWareHouseSync:
                         MAX(F.IndiceAcumulado) as IndiceTotal
                     FROM Dim_Estudiante E
                     JOIN Fact_Calificaciones F ON E.IdPersona = F.IdPersona
-                    JOIN Dim_Estudiante E2 ON E.IdCarreraActiva = E2.IdCarreraActiva 
-                    WHERE E2.Matricula = %s
+                    WHERE F.IdCarrera = (
+                        SELECT NULLIF(IdCarreraActiva, 0) FROM Dim_Estudiante WHERE Matricula = %s LIMIT 1
+                    )
                     GROUP BY E.Matricula
                 ),
                 CTE_Ranked AS (

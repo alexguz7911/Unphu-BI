@@ -982,14 +982,14 @@
                 </div>
             </div>
 
-            <!-- Comparativa de Rendimiento Global -->
+            <!-- Comparativa de Rendimiento por Carrera -->
             <div class="card">
                 <div class="card-header">
                     <div class="card-title">
                         <svg viewBox="0 0 24 24">
                             <path d="M3 3v18h18M7 14l5-5 4 4 5-5" />
                         </svg>
-                        Comparativa de Rendimiento Global
+                        Comparativa de Rendimiento por Carrera
                     </div>
                     <div class="legend-area">
                         <div class="legend-item">
@@ -1004,7 +1004,7 @@
 
                 <div class="bar-chart-container">
                     <div class="bar-labels">
-                        <span id="carreraNombre">MEDICINA (GENERAL)</span>
+                        <span id="carreraNombreLabel"></span>
                         <span>SEMESTRE ACTUAL</span>
                     </div>
                     <div class="bar-wrapper">
@@ -1099,9 +1099,8 @@
                     <div>
                         <select id="cargaAcademicaSelect"
                             style="padding: 0.3rem 0.5rem; border-radius: 6px; border: 1px solid var(--border-color); font-size: 0.8rem; outline: none; background: white; cursor: pointer; color: var(--text-main); font-weight: 500;">
-                            <option value="12">Ligera (Max 12 Créditos)</option>
-                            <option value="16" selected>Normal (Max 16 Créditos)</option>
-                            <option value="22">Completa (Max 22 Créditos)</option>
+                            <option value="23" selected>23 creditos es un bloque</option>
+                            <option value="10">10 creditos es medio bloque</option>
                         </select>
                     </div>
                 </div>
@@ -1176,7 +1175,8 @@
                         if (unphuData.carrera) {
                             // Trim carrera code if too long
                             const name = unphuData.carrera.split('25')[0] || unphuData.carrera;
-                            document.getElementById('carreraNombre').textContent = name;
+                            const h1Label = document.getElementById('carreraNombreLabel');
+                            if (h1Label) h1Label.textContent = name;
                         }
 
                         if (unphuData.stats) {
@@ -1272,18 +1272,24 @@
                                     return;
                                 }
 
-                                const maxCreditos = parseInt(selectCarga.value) || 16;
+                                const maxCreditos = parseInt(selectCarga.value) || 23;
                                 let creditosActuales = 0;
                                 let materiasSugeridas = [];
                                 let materiasOcultas = [];
 
-                                // Ordenar por proridad: Mayor unlocks primero
+                                // Ordenar por proridad: Mayor unlocks primero (Ruta Crítica)
+                                // Si tienen mismos unlocks, darle prioridad a la que tenga más creditos (más valor para el bloque)
                                 const sortedSubjects = [...unphuData.pending_subjects].sort((a, b) => {
                                     const uA = a.unlocks || 0;
                                     const uB = b.unlocks || 0;
-                                    return uB - uA; // Descendente
+                                    if (uB !== uA) {
+                                        return uB - uA; // Descendente por prerequisitos que abre
+                                    }
+                                    return b.credits - a.credits; // Descendente por creditos
                                 });
 
+                                // Estrategia de Selección: Llenar la mochila sin pasarnos del límite exacto de créditos.
+                                // Ya que hemos ordenado por prioridad "unlocks", las más importantes entran de primero.
                                 sortedSubjects.forEach(subject => {
                                     if (creditosActuales + subject.credits <= maxCreditos) {
                                         materiasSugeridas.push(subject);
@@ -1293,7 +1299,7 @@
                                     }
                                 });
 
-                                // Si por alguna razón ninguna entra por créditos (ej. materia de 20 cred y límite 12, poco probable pero posible)
+                                // Muestra de contigencia en caso de algo estar mal con la carga 
                                 if (materiasSugeridas.length === 0 && sortedSubjects.length > 0) {
                                     materiasSugeridas.push(sortedSubjects[0]);
                                     creditosActuales += sortedSubjects[0].credits;
@@ -1307,11 +1313,11 @@
 
                                     const codeTrunc = subject.code.split('/')[0].trim();
                                     const alertaPrioridad = (subject.unlocks && subject.unlocks > 0)
-                                        ? `<span class="badge-sug yellow" style="margin-left: 5px; font-size: 0.6rem;" title="Abre ${subject.unlocks} materia(s)">LLAVE</span>` : '';
+                                        ? `<span class="badge-sug yellow" style="margin-left: 5px; font-size: 0.6rem;" title="Abre ${subject.unlocks} materia(s)">ESTRATÉGICA</span>` : '';
 
                                     item.innerHTML = `
                                         <span class="sugerida-name" title="${subject.name}">${subject.name} (${codeTrunc}) ${alertaPrioridad}</span>
-                                        <span class="badge-sug blue">${subject.credits} Créditos</span>
+                                        <span class="badge-sug blue">${subject.credits} CR</span>
                                     `;
                                     sugeridasContainer.appendChild(item);
                                 });
@@ -1326,7 +1332,7 @@
                                 sumario.style.fontSize = '0.85rem';
                                 sumario.style.fontWeight = 'bold';
                                 sumario.style.color = 'var(--text-main)';
-                                sumario.innerHTML = `<span>Créditos de esta carga:</span> <span style="color: var(--primary-green);">${creditosActuales} / ${maxCreditos}</span>`;
+                                sumario.innerHTML = `<span>Total Bloque:</span> <span style="color: var(--primary-green);">${creditosActuales} / ${maxCreditos} CR</span>`;
                                 sugeridasContainer.appendChild(sumario);
 
                                 // Botón para ver el resto
@@ -1386,6 +1392,9 @@
                                 const promedioCarrera = (unphuData.ranking && unphuData.ranking.average) ? unphuData.ranking.average : 2.53;
                                 const legendProm = document.getElementById('legendPromedioCarreraTxt');
                                 if (legendProm) legendProm.textContent = `(${promedioCarrera.toFixed(2)})`;
+
+                                const carreraLabel = document.getElementById('carreraNombreLabel');
+                                if (carreraLabel) carreraLabel.textContent = unphuData.carrera ? unphuData.carrera.toUpperCase() : "GENERAL";
 
                                 // Update chart
                                 const maxIndex = 4.0;
