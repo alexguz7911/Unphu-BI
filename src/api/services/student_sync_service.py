@@ -33,11 +33,10 @@ class StudentSyncService:
         api_data['matricula'] = data_est.get('username')
         api_data['carrera'] = data_est.get('career')
         api_data['nombre'] = nombre_final
-        api_data['id_carrera'] = str(id_carrera) if id_carrera else "0"
-
         # 2. Carrera
         data_car = UnphuApiService.get_student_career(str(id_persona))
         id_carrera = data_car.get('IdCarrera') if data_car else None
+        api_data['id_carrera'] = str(id_carrera) if id_carrera else "0"
 
         # 3. Historial (Pending Grades contiene todo el historial en el endpoint de la UNPHU)
         historial = UnphuApiService.get_pending_grades(str(id_persona), str(id_carrera))
