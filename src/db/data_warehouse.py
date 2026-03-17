@@ -262,28 +262,33 @@ class DataWareHouseSync:
                     WHERE E.Matricula = %s
                     LIMIT 1
                 ),
-                CTE_StudentIndices AS (
+                CTE_StudentLatestIndex AS (
                     SELECT 
                         E.Matricula,
-                        MAX(F.IndiceAcumulado) as IndiceTotal
+                        F.IndiceAcumulado as IndiceActual,
+                        ROW_NUMBER() OVER (PARTITION BY E.Matricula ORDER BY F.IdPeriodo DESC) as RowNum
                     FROM Dim_Estudiante E
                     JOIN Fact_Calificaciones F ON E.IdPersona = F.IdPersona
                     JOIN Dim_Carrera C ON E.IdCarreraActiva = C.IdCarrera
                     WHERE TRIM(UPPER(C.NombreCarrera)) IN (SELECT CareerName FROM CTE_TargetCareerName)
-                    GROUP BY E.Matricula
+                      AND F.IndiceAcumulado > 0.1
+                ),
+                CTE_StudentIndices AS (
+                    SELECT Matricula, IndiceActual
+                    FROM CTE_StudentLatestIndex
+                    WHERE RowNum = 1
                 ),
                 CTE_Ranked AS (
                     SELECT 
                         Matricula,
-                        IndiceTotal,
-                        RANK() OVER (ORDER BY IndiceTotal DESC) as Posicion
+                        IndiceActual,
+                        RANK() OVER (ORDER BY IndiceActual DESC) as Posicion
                     FROM CTE_StudentIndices
-                    WHERE IndiceTotal IS NOT NULL
                 )
                 SELECT 
                     (SELECT Posicion FROM CTE_Ranked WHERE Matricula = %s) as RankEstudiante,
                     (SELECT COUNT(*) FROM CTE_Ranked) as TotalEstudiantes,
-                    (SELECT AVG(CAST(IndiceTotal as FLOAT)) FROM CTE_Ranked) as PromedioCarrera
+                    (SELECT AVG(CAST(IndiceActual as FLOAT)) FROM CTE_Ranked) as PromedioCarrera
             """
             cursor.execute(query, (matricula, matricula))
             row = cursor.fetchone()
