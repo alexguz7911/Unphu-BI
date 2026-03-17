@@ -255,19 +255,21 @@ class DataWareHouseSync:
         try:
             cursor = conn.cursor()
             query = """
-                WITH CTE_StudentIndex AS (
+                WITH CTE_TargetCareerName AS (
+                    SELECT TRIM(UPPER(C.NombreCarrera)) as CareerName
+                    FROM Dim_Estudiante E
+                    JOIN Dim_Carrera C ON E.IdCarreraActiva = C.IdCarrera
+                    WHERE E.Matricula = %s
+                    LIMIT 1
+                ),
+                CTE_StudentIndices AS (
                     SELECT 
                         E.Matricula,
                         MAX(F.IndiceAcumulado) as IndiceTotal
                     FROM Dim_Estudiante E
                     JOIN Fact_Calificaciones F ON E.IdPersona = F.IdPersona
-                    JOIN Dim_Carrera C_F ON F.IdCarrera = C_F.IdCarrera
-                    WHERE TRIM(UPPER(C_F.NombreCarrera)) = (
-                        SELECT TRIM(UPPER(C.NombreCarrera))
-                        FROM Dim_Estudiante E2
-                        JOIN Dim_Carrera C ON E2.IdCarreraActiva = C.IdCarrera
-                        WHERE E2.Matricula = %s LIMIT 1
-                    )
+                    JOIN Dim_Carrera C ON E.IdCarreraActiva = C.IdCarrera
+                    WHERE TRIM(UPPER(C.NombreCarrera)) IN (SELECT CareerName FROM CTE_TargetCareerName)
                     GROUP BY E.Matricula
                 ),
                 CTE_Ranked AS (
@@ -275,7 +277,7 @@ class DataWareHouseSync:
                         Matricula,
                         IndiceTotal,
                         RANK() OVER (ORDER BY IndiceTotal DESC) as Posicion
-                    FROM CTE_StudentIndex
+                    FROM CTE_StudentIndices
                     WHERE IndiceTotal IS NOT NULL
                 )
                 SELECT 
@@ -286,9 +288,9 @@ class DataWareHouseSync:
             cursor.execute(query, (matricula, matricula))
             row = cursor.fetchone()
             
-            if row and row[0] and row[1]:
-                promedio = round(row[2], 2) if row[2] else 2.53
-                return {"rank": row[0], "total": row[1], "average": promedio}
+            if row and row[0] is not None and row[1] is not None:
+                promedio = round(float(row[2]), 2) if row[2] is not None else 2.53
+                return {"rank": int(row[0]), "total": int(row[1]), "average": promedio}
             else:
                 return {"rank": "--", "total": "--", "average": 2.53}
         except Exception as e:
