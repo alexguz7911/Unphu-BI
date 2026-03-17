@@ -17,88 +17,119 @@ class StudentSyncService:
         Extrae toda la información disponible para un estudiante y la guarda en el DW.
         Retorna el objeto api_data listo para ser usado por el frontend.
         """
-        api_data: Dict[str, Any] = {}
-        
-        # 1. Datos Básicos del Estudiante
-        data_est = UnphuApiService.get_student_data(matricula)
-        if not data_est:
-            return {}
-
-        id_persona = data_est.get('id')
-        if not id_persona:
-            id_persona_match = re.search(r'\d+', matricula.replace('-',''))
-            id_persona = int(id_persona_match.group()) if id_persona_match else 0
-
-        nombre_final = nombre_google or data_est.get('names') or 'Estudiante'
-        api_data['matricula'] = data_est.get('username')
-        api_data['carrera'] = data_est.get('career')
-        api_data['nombre'] = nombre_final
-        # 2. Carrera
-        data_car = UnphuApiService.get_student_career(str(id_persona))
-        id_carrera = data_car.get('IdCarrera') if data_car else None
-        api_data['id_carrera'] = str(id_carrera) if id_carrera else "0"
-
-        # 3. Historial (Pending Grades contiene todo el historial en el endpoint de la UNPHU)
-        historial = UnphuApiService.get_pending_grades(str(id_persona), str(id_carrera))
-        if len(historial) > 0:
-            creditos_evaluados = calculate_credits_evaluated(historial)
-            max_approved = max((int(h.get('approved', 0)) if isinstance(h.get('approved'), (int, str)) and str(h.get('approved')).isdigit() else 0 for h in historial), default=0)
-            max_pensum = max((int(h.get('pensumCredit', 0)) if isinstance(h.get('pensumCredit'), (int, str)) and str(h.get('pensumCredit')).isdigit() else 0 for h in historial), default=0)
+        try:
+            api_data: Dict[str, Any] = {}
             
-            api_data['stats'] = {
-                'creditosAprobados': max_approved,
-                'creditosEvaluados': creditos_evaluados,
-                'totalCreditos': max_pensum,
-                'materiasAprobadas': max_approved // 3
-            }
-            
-            pending_list = [
-                h for h in historial 
-                if not (str(h.get('lyrics', '')).strip() or 
-                        str(h.get('number', '')).strip() or 
-                        str(h.get('observations', '')).strip())
-            ]
-            
-            api_data['pending_subjects'] = parse_prerequisites(pending_list)
-            api_data['history'] = build_history_by_period(historial)
+            # 1. Datos Básicos del Estudiante
+            data_est = UnphuApiService.get_student_data(matricula)
+            if not data_est:
+                print(f"[SYNC] No data found for student {matricula} in API")
+                return {}
 
-        # 4. Índices
-        # Usamos el 2025-3 como referencia para obtener el índice acumulado más reciente de la API
-        grades_list = UnphuApiService.get_semester_grades(2025, 3, str(id_persona), str(id_carrera))
-        real_index = 0
-        if len(grades_list) > 0 and grades_list[0].get('cumulativeIndex', 0) > 0:
-            real_index = float(grades_list[0].get('cumulativeIndex', 0))
-        else:
-            # Fallback a DB local (DW) si la API no devuelve índice
-            conn = DBConnection.get_connection()
-            if conn:
+            id_persona = data_est.get('id')
+            if not id_persona:
+                id_persona_match = re.search(r'\d+', matricula.replace('-',''))
+                id_persona = int(id_persona_match.group()) if id_persona_match else 0
+
+            nombre_final = nombre_google or data_est.get('names') or 'Estudiante'
+            api_data['matricula'] = data_est.get('username')
+            api_data['carrera'] = data_est.get('career')
+            api_data['nombre'] = nombre_final
+            
+            # 2. Carrera
+            data_car = UnphuApiService.get_student_career(str(id_persona))
+            id_carrera = data_car.get('IdCarrera') if data_car else None
+            api_data['id_carrera'] = str(id_carrera) if id_carrera else "0"
+
+            # 3. Historial (Pending Grades contiene todo el historial en el endpoint de la UNPHU)
+            historial = UnphuApiService.get_pending_grades(str(id_persona), str(id_carrera))
+            if len(historial) > 0:
+                creditos_evaluados = calculate_credits_evaluated(historial)
+                
+                # Extracción robusta de créditos
+                max_approved = 0
+                max_pensum = 0
                 try:
-                    cursor = conn.cursor()
-                    id_p_num = int(re.search(r'\d+', matricula.replace('-','')).group()) if re.search(r'\d+', matricula.replace('-','')) else 0
-                    cursor.execute("SELECT MAX(IndiceAcumulado) FROM Fact_Calificaciones WHERE IdPersona = %s", (id_p_num,))
-                    row = cursor.fetchone()
-                    if row and row[0] is not None:
-                        real_index = float(row[0])
-                except Exception as e:
-                    print(f"Error reading index from DB fallback for {matricula}:", e)
-                finally:
-                    conn.close()
-        
-        api_data['indices'] = {'semesterIndex': real_index, 'cumulativeIndex': real_index}
+                    def safe_get_int(d, key):
+                        v = d.get(key, 0)
+                        try: return int(float(v)) if v is not None else 0
+                        except: return 0
+                        
+                    max_approved = max((safe_get_int(h, 'approved') for h in historial), default=0)
+                    max_pensum = max((safe_get_int(h, 'pensumCredit') for h in historial), default=0)
+                except: pass
 
-        # 5. Periodo Actual y Selección
-        periodo_actual = UnphuApiService.get_current_period()
-        ano_actual = 2026
-        num_periodo = 1
-        
-        enrolled = UnphuApiService.get_officially_enrolled(ano_actual, num_periodo, str(id_persona), str(id_carrera))
-        selected = UnphuApiService.get_unofficial_selected(ano_actual, num_periodo, str(id_persona), str(id_carrera))
-        
-        api_data['current_period'] = [periodo_actual] if periodo_actual else []
-        api_data['registered_subjects'] = enrolled
-        api_data['selected_subjects'] = selected
+                api_data['stats'] = {
+                    'creditosAprobados': max_approved,
+                    'creditosEvaluados': creditos_evaluados,
+                    'totalCreditos': max_pensum,
+                    'materiasAprobadas': max_approved // 3 if max_approved else 0
+                }
+                
+                pending_list = [
+                    h for h in historial 
+                    if not (str(h.get('lyrics', '')).strip() or 
+                            str(h.get('number', '')).strip() or 
+                            str(h.get('observations', '')).strip())
+                ]
+                
+                api_data['pending_subjects'] = parse_prerequisites(pending_list)
+                api_data['history'] = build_history_by_period(historial)
 
-        # 6. SINCRONIZACIÓN CON DATA WAREHOUSE (DW)
-        DataWareHouseSync.sync_student_login(api_data, matricula, nombre_final, str(id_carrera))
+            # 4. Índices
+            real_index = 0.0
+            try:
+                # Usamos el 2025-3 como referencia para obtener el índice acumulado más reciente de la API
+                grades_list = UnphuApiService.get_semester_grades(2025, 3, str(id_persona), str(id_carrera))
+                if grades_list and len(grades_list) > 0:
+                    val = grades_list[0].get('cumulativeIndex')
+                    if val is not None:
+                        try:
+                            real_index = float(val)
+                        except (ValueError, TypeError):
+                            real_index = 0.0
+                
+                # Si sigue en 0, intentamos fallback a DB local (DW)
+                if real_index <= 0:
+                    conn = DBConnection.get_connection()
+                    if conn:
+                        try:
+                            cursor = conn.cursor()
+                            id_p_num = int(re.search(r'\d+', matricula.replace('-','')).group()) if re.search(r'\d+', matricula.replace('-','')) else 0
+                            cursor.execute("SELECT MAX(IndiceAcumulado) FROM Fact_Calificaciones WHERE IdPersona = %s", (id_p_num,))
+                            row = cursor.fetchone()
+                            if row and row[0] is not None:
+                                real_index = float(row[0])
+                        except Exception as db_e:
+                            print(f"[SYNC] Error fallback DB index {matricula}: {db_e}")
+                        finally:
+                            conn.close()
+            except Exception as e_ind:
+                print(f"[SYNC] Error extracting indices for {matricula}: {e_ind}")
+            
+            api_data['indices'] = {'semesterIndex': real_index, 'cumulativeIndex': real_index}
 
-        return api_data
+            # 5. Periodo Actual y Selección
+            periodo_actual = UnphuApiService.get_current_period()
+            ano_actual = 2026
+            num_periodo = 1
+            
+            enrolled = UnphuApiService.get_officially_enrolled(ano_actual, num_periodo, str(id_persona), str(id_carrera))
+            selected = UnphuApiService.get_unofficial_selected(ano_actual, num_periodo, str(id_persona), str(id_carrera))
+            
+            api_data['current_period'] = [periodo_actual] if periodo_actual else []
+            api_data['registered_subjects'] = enrolled
+            api_data['selected_subjects'] = selected
+
+            # 6. SINCRONIZACIÓN CON DATA WAREHOUSE (DW)
+            try:
+                DataWareHouseSync.sync_student_login(api_data, matricula, nombre_final, str(id_carrera))
+            except Exception as sync_e:
+                print(f"[SYNC] Non-critical error in sync_student_login for {matricula}: {sync_e}")
+
+            return api_data
+        except Exception as global_e:
+            import traceback
+            print(f"[SYNC] CRITICAL ERROR in fetch_and_sync_all for {matricula}:")
+            traceback.print_exc()
+            return api_data if 'api_data' in locals() and api_data else {}

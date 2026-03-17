@@ -5,11 +5,15 @@ def calculate_credits_evaluated(historial: List[Dict[str, Any]]) -> int:
     """Calculates exactly how many credits the student has evaluated for GPA based on valid marks."""
     creditos_evaluados = 0
     for subject in historial:
-        let = str(subject.get('lyrics')).strip()
+        let = str(subject.get('lyrics', '')).strip()
         if let in ['A', 'B', 'C', 'D', 'F']:
             c_val = subject.get('credits', 0)
-            added_val = int(c_val) if isinstance(c_val, (int, str)) and str(c_val).strip().isdigit() else 0
-            creditos_evaluados = creditos_evaluados + added_val
+            try:
+                # Convertir primero a float por si viene como "3.0" y luego a int
+                added_val = int(float(c_val)) if c_val is not None else 0
+            except (ValueError, TypeError):
+                added_val = 0
+            creditos_evaluados += added_val
     return creditos_evaluados
 
 def parse_prerequisites(pending_list: List[Dict[str, Any]]) -> List[Dict[str, Any]]:

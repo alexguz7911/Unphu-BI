@@ -27,19 +27,21 @@ class DataWareHouseSync:
             if current_period_list and len(current_period_list) > 0:
                 p_data = current_period_list[0]
                 id_periodo_actual = p_data.get('idPeriodo')
-                ano = p_data.get('ano', datetime.now().year)
-                num_per = p_data.get('numeroPeriodo', 1)
-                desc = p_data.get('periodName', f'Periodo {num_per} {ano}')
                 
-                cursor.execute("""
-                    INSERT INTO Dim_Periodo (IdPeriodo, Ano, NumeroPeriodo, Descripcion, EsPeriodoActual) 
-                    VALUES (%s, %s, %s, %s, True)
-                    ON CONFLICT (IdPeriodo) DO UPDATE 
-                    SET Ano = EXCLUDED.Ano, 
-                        NumeroPeriodo = EXCLUDED.NumeroPeriodo, 
-                        Descripcion = EXCLUDED.Descripcion, 
-                        EsPeriodoActual = True;
-                """, (id_periodo_actual, ano, num_per, desc))
+                if id_periodo_actual:
+                    ano = p_data.get('ano', datetime.now().year)
+                    num_per = p_data.get('numeroPeriodo', 1)
+                    desc = p_data.get('periodName', f'Periodo {num_per} {ano}')
+                    
+                    cursor.execute("""
+                        INSERT INTO Dim_Periodo (IdPeriodo, Ano, NumeroPeriodo, Descripcion, EsPeriodoActual) 
+                        VALUES (%s, %s, %s, %s, True)
+                        ON CONFLICT (IdPeriodo) DO UPDATE 
+                        SET Ano = EXCLUDED.Ano, 
+                            NumeroPeriodo = EXCLUDED.NumeroPeriodo, 
+                            Descripcion = EXCLUDED.Descripcion, 
+                            EsPeriodoActual = True;
+                    """, (id_periodo_actual, ano, num_per, desc))
             
             
             # --- 2. DIM_ESTUDIANTE ---
@@ -92,7 +94,11 @@ class DataWareHouseSync:
                 for asig in sem_data:
                     code = asig.get('code', 'UNK')
                     name = asig.get('name', 'Asignatura Desconocida')
-                    cred = int(asig.get('credits', 0))
+                    raw_cred = asig.get('credits', 0)
+                    try:
+                        cred = int(float(raw_cred)) if raw_cred is not None else 0
+                    except (ValueError, TypeError):
+                        cred = 0
                     id_asig = abs(hash(code)) % 1000000 # Demo ID
                     
                     cursor.execute("""
@@ -125,7 +131,11 @@ class DataWareHouseSync:
                 for asig in selected:
                     code = asig.get('subjectCode', 'UNK')
                     name = asig.get('subjectName', 'Desconocida')
-                    cred = int(asig.get('credits', 0))
+                    raw_cred = asig.get('credits', 0)
+                    try:
+                        cred = int(float(raw_cred)) if raw_cred is not None else 0
+                    except (ValueError, TypeError):
+                        cred = 0
                     id_asig = hash(code) % 1000000
                     
                     cursor.execute("""
