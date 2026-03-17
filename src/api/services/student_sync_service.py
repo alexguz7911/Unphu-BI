@@ -99,31 +99,37 @@ class StudentSyncService:
             real_index = 0.0
             try:
                 # Intentamos en varios periodos recientes y para todas las carreras
-                # Generalmente el índice acumulado es global o se arrastra
+                # Buscamos de lo más nuevo a lo más antiguo. En cuanto encontramos un índice válido, PARAMOS.
                 periods_to_check = [(2026, 1), (2025, 3), (2025, 2)]
-                found_indices = []
                 
+                found = False
                 for yr, per in periods_to_check:
-                    # Probamos con todas las carreras por si el índice está en la "antigua"
+                    if found: break
                     for car in careers:
                         c_id = str(car.get('IdCarrera'))
                         grades_list = UnphuApiService.get_semester_grades(yr, per, str(id_persona), c_id)
                         if grades_list and len(grades_list) > 0:
                             val = grades_list[0].get('cumulativeIndex')
-                            if val and float(val) > 0:
-                                found_indices.append(float(val))
+                            if val and float(val) > 0.1:
+                                real_index = float(val)
+                                found = True
+                                break
                 
-                if found_indices:
-                    real_index = max(found_indices) # Tomamos el más alto detectado
-                
-                # Si sigue en 0, intentamos fallback a DB local (DW)
+                # Si sigue en 0, intentamos fallback a DB local (DW) - Solo el más reciente
                 if real_index <= 0:
                     conn = DBConnection.get_connection()
                     if conn:
                         try:
                             cursor = conn.cursor()
                             id_p_num = int(re.search(r'\d+', matricula.replace('-','')).group()) if re.search(r'\d+', matricula.replace('-','')).group() else 0
-                            cursor.execute("SELECT MAX(IndiceAcumulado) FROM Fact_Calificaciones WHERE IdPersona = %s", (id_p_num,))
+                            # Obtenemos el índice del periodo más reciente registrado en DB
+                            cursor.execute("""
+                                SELECT IndiceAcumulado 
+                                FROM Fact_Calificaciones 
+                                WHERE IdPersona = %s 
+                                ORDER BY IdPeriodo DESC 
+                                LIMIT 1
+                            """, (id_p_num,))
                             row = cursor.fetchone()
                             if row and row[0] is not None:
                                 real_index = float(row[0])
