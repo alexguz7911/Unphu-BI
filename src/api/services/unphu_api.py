@@ -39,15 +39,12 @@ class UnphuApiService:
         return response_data
 
     @staticmethod
-    def get_student_career(id_persona: str) -> Dict[str, Any]:
+    def get_student_careers(id_persona: str) -> List[Dict[str, Any]]:
         data = UnphuApiService._get(f'/get-student-careers/?IdPersona={id_persona}')
-        data_list = data.get('data', [{}])
-        if not isinstance(data_list, list) or len(data_list) == 0:
-            return {}
-        career_data = data_list[0]
-        if not isinstance(career_data, dict):
-            return {}
-        return career_data
+        data_list = data.get('data', [])
+        if not isinstance(data_list, list):
+            return []
+        return data_list
 
     @staticmethod
     def get_pending_grades(id_persona: str, id_carrera: str) -> List[Dict[str, Any]]:

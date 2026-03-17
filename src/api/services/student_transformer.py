@@ -113,3 +113,54 @@ def build_history_by_period(historial: List[Dict[str, Any]]) -> Dict[str, List[D
 
     return sorted_history
 
+def deduplicate_history(historial: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """
+    Deduplicates a student's history by subject code. 
+    If a subject appears multiple times (e.g., across pensums), 
+    it keeps the entry with the highest grade.
+    """
+    if not historial:
+        return []
+        
+    best_entries: Dict[str, Dict[str, Any]] = {}
+    
+    # Mapeo de valores de notas literales para comparación (mayor es mejor)
+    # R=0, F=1, D=2, C=3, B=4, A=5
+    # Nota: EX (Exonerada) y AP (Aprobada por nivel) se tratan como aprobadas con peso alto
+    grade_weights = {
+        'A': 5, 'B': 4, 'C': 3, 'D': 2, 'F': 1, 'R': 0, 'W': 0, 'FI': 1, 'EX': 6, 'AP': 3
+    }
+
+    for entry in historial:
+        code = str(entry.get('codeSubject', '')).strip()
+        if not code:
+            continue
+            
+        if code not in best_entries:
+            best_entries[code] = entry
+            continue
+            
+        # Si ya existe, comparar notas
+        existing = best_entries[code]
+        
+        new_let = str(entry.get('lyrics', '')).upper().strip()
+        old_let = str(existing.get('lyrics', '')).upper().strip()
+        
+        new_weight = grade_weights.get(new_let, -1)
+        old_weight = grade_weights.get(old_let, -1)
+        
+        # Si la nueva es mejor o si la vieja no tiene nota y la nueva sí
+        if new_let and (not old_let or new_weight > old_weight):
+            best_entries[code] = entry
+        elif not old_let and not new_let:
+             # Si ninguna tiene letra, comparar por número
+             try:
+                 new_num = float(entry.get('number', 0) or 0)
+                 old_num = float(existing.get('number', 0) or 0)
+                 if new_num > old_num:
+                     best_entries[code] = entry
+             except:
+                 pass
+                 
+    return list(best_entries.values())
+
