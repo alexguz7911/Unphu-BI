@@ -50,13 +50,23 @@ class StudentSyncService:
                 if car_id:
                     hist = UnphuApiService.get_pending_grades(str(id_persona), car_id)
                     if hist:
+                        # Filtrar materias basura: INF-158-L y periodos fantasmas como '99'
+                        # El usuario indica que la carrera solo llega al 12 y INF-158-L no va.
+                        hist = [
+                            h for h in hist 
+                            if str(h.get('codeSubject', '')).strip() != 'INF-158-L' 
+                            and str(h.get('semester', '')).strip() != '99'
+                        ]
                         all_history.extend(hist)
             
             # Deduplicar historial para evitar contar doble materias convalidadas o repetidas
             historial = deduplicate_history(all_history)
             
             if len(historial) > 0:
-                creditos_evaluados = calculate_credits_evaluated(historial)
+                # Créditos evaluados = TODOS los intentos (incluyendo F/FI repeats)
+                # Se calcula sobre all_history (pre-dedup) para reflejar todos los créditos
+                # que el estudiante cursó y fueron evaluados académicamente.
+                creditos_evaluados = calculate_credits_evaluated(all_history)
                 
                 # Extracción robusta de créditos
                 max_approved = 0
@@ -68,7 +78,6 @@ class StudentSyncService:
                         except: return 0
                         
                     # Sumamos creditos aprobados de la lista deduplicada
-                    # No usamos MAX porque queremos el total real de materias con nota literal válida
                     for h in historial:
                         let = str(h.get('lyrics', '')).strip()
                         if let in ['A', 'B', 'C', 'D', 'EX', 'AP']:
@@ -95,34 +104,52 @@ class StudentSyncService:
                 api_data['pending_subjects'] = parse_prerequisites(pending_list)
                 api_data['history'] = build_history_by_period(historial)
 
-            # 4. Índices (Búsqueda exhaustiva del índice más reciente)
+            # 4. Índices: recorrer TODOS los períodos históricos para construir el historial real
             real_index = 0.0
+            index_history: list = []  # Lista: [{label, cumulativeIndex, semesterIndex}]
+            
             try:
-                # Intentamos en varios periodos recientes y para todas las carreras
-                # Buscamos de lo más nuevo a lo más antiguo. En cuanto encontramos un índice válido, PARAMOS.
-                periods_to_check = [(2026, 1), (2025, 3), (2025, 2)]
+                # Etiquetas de período UNPHU: 1=ENE-ABR, 2=MAY-AGO, 3=SEP-DIC
+                PERIOD_LABELS = {1: 'ENE-ABR', 2: 'MAY-AGO', 3: 'SEP-DIC'}
+                all_periods_to_check = [
+                    (yr, per)
+                    for yr in range(2020, 2027)
+                    for per in [1, 2, 3]
+                ]
                 
-                found = False
-                for yr, per in periods_to_check:
-                    if found: break
+                seen_labels = set()
+                for yr, per in all_periods_to_check:
                     for car in careers:
                         c_id = str(car.get('IdCarrera'))
                         grades_list = UnphuApiService.get_semester_grades(yr, per, str(id_persona), c_id)
                         if grades_list and len(grades_list) > 0:
-                            val = grades_list[0].get('cumulativeIndex')
-                            if val and float(val) > 0.1:
-                                real_index = float(val)
-                                found = True
+                            val_cum = grades_list[0].get('cumulativeIndex')
+                            val_sem = grades_list[0].get('semesterIndex') or grades_list[0].get('periodIndex')
+                            if val_cum and float(val_cum) > 0.1:
+                                label = f"{PERIOD_LABELS.get(per, 'PER-' + str(per))}-{yr}"
+                                if label not in seen_labels:
+                                    seen_labels.add(label)
+                                    cum_f = float(val_cum)
+                                    sem_f = float(val_sem) if val_sem else cum_f
+                                    index_history.append({
+                                        'label': label,
+                                        'cumulativeIndex': round(cum_f, 2),
+                                        'semesterIndex': round(sem_f, 2),
+                                        'year': yr,
+                                        'period': per
+                                    })
+                                    real_index = cum_f
                                 break
                 
-                # Si sigue en 0, intentamos fallback a DB local (DW) - Solo el más reciente
+                print(f"[SYNC] Index history for {matricula}: {len(index_history)} periods. Latest: {real_index}")
+                
+                # Fallback a DB si no se obtuvo nada de la API
                 if real_index <= 0:
                     conn = DBConnection.get_connection()
                     if conn:
                         try:
                             cursor = conn.cursor()
                             id_p_num = int(re.search(r'\d+', matricula.replace('-','')).group()) if re.search(r'\d+', matricula.replace('-','')).group() else 0
-                            # Obtenemos el índice del periodo más reciente registrado en DB
                             cursor.execute("""
                                 SELECT IndiceAcumulado 
                                 FROM Fact_Calificaciones 
@@ -140,7 +167,13 @@ class StudentSyncService:
             except Exception as e_ind:
                 print(f"[SYNC] Error extracting indices for {matricula}: {e_ind}")
             
-            api_data['indices'] = {'semesterIndex': real_index, 'cumulativeIndex': real_index}
+            api_data['index_history'] = index_history  # Historial real por periodo para la gráfica
+            
+            # semesterIndex = GPA del ÚLTIMO período (no el acumulado)
+            # cumulativeIndex = GPA acumulado total
+            last_sem_index = index_history[-1]['semesterIndex'] if index_history else real_index
+            api_data['indices'] = {'semesterIndex': round(last_sem_index, 2), 'cumulativeIndex': round(real_index, 2)}
+
 
             # 5. Periodo Actual y Selección
             periodo_actual = UnphuApiService.get_current_period()

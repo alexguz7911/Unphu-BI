@@ -6,7 +6,7 @@ def calculate_credits_evaluated(historial: List[Dict[str, Any]]) -> int:
     creditos_evaluados = 0
     for subject in historial:
         let = str(subject.get('lyrics', '')).strip()
-        if let in ['A', 'B', 'C', 'D', 'F']:
+        if let in ['A', 'B', 'C', 'D', 'F', 'FI']:
             c_val = subject.get('credits', 0)
             try:
                 # Convertir primero a float por si viene como "3.0" y luego a int
@@ -77,10 +77,17 @@ def build_history_by_period(historial: List[Dict[str, Any]]) -> Dict[str, List[D
             elif let == 'R':
                 status = "Retirado"
             
+            # Parsing robusto de créditos para evitar que "4.0" se convierta en 0
+            try:
+                c_raw = subject.get('credits', 0)
+                c_val = int(float(c_raw)) if c_raw is not None else 0
+            except (ValueError, TypeError):
+                c_val = 0
+
             history_by_period[per].append({
                 'code': subject.get('codeSubject', '').strip(),
                 'name': subject.get('subject', '').strip(),
-                'credits': int(subject.get('credits', 0)) if isinstance(subject.get('credits'), (int, str)) and str(subject.get('credits')).isdigit() else 0,
+                'credits': c_val,
                 'grade': num,
                 'letter': let,
                 'obs': obs,
@@ -124,11 +131,10 @@ def deduplicate_history(historial: List[Dict[str, Any]]) -> List[Dict[str, Any]]
         
     best_entries: Dict[str, Dict[str, Any]] = {}
     
-    # Mapeo de valores de notas literales para comparación (mayor es mejor)
-    # R=0, F=1, D=2, C=3, B=4, A=5
-    # Nota: EX (Exonerada) y AP (Aprobada por nivel) se tratan como aprobadas con peso alto
+    # Mapeo de valores de notas literales para comparación
+    # Prioridad: A(4) > B(3) > C(2) > D(1) > EX/AP(Passing but no GPA) > F/FI(0) > R/W(Neutral)
     grade_weights = {
-        'A': 5, 'B': 4, 'C': 3, 'D': 2, 'F': 1, 'R': 0, 'W': 0, 'FI': 1, 'EX': 6, 'AP': 3
+        'A': 10, 'B': 9, 'C': 8, 'D': 7, 'EX': 6, 'AP': 5, 'F': 4, 'FI': 4, 'R': 1, 'W': 1
     }
 
     for entry in historial:
@@ -140,27 +146,46 @@ def deduplicate_history(historial: List[Dict[str, Any]]) -> List[Dict[str, Any]]
             best_entries[code] = entry
             continue
             
-        # Si ya existe, comparar notas
         existing = best_entries[code]
         
         new_let = str(entry.get('lyrics', '')).upper().strip()
         old_let = str(existing.get('lyrics', '')).upper().strip()
         
-        new_weight = grade_weights.get(new_let, -1)
-        old_weight = grade_weights.get(old_let, -1)
+        # Fallback a nota numérica si no hay letra
+        if not new_let:
+            try:
+                n = float(entry.get('number', 0) or 0)
+                if n >= 90: new_let = 'A'
+                elif n >= 80: new_let = 'B'
+                elif n >= 70: new_let = 'C'
+                elif n >= 60: new_let = 'D'
+                elif n > 0: new_let = 'F'
+            except: pass
+
+        if not old_let:
+            try:
+                n = float(existing.get('number', 0) or 0)
+                if n >= 90: old_let = 'A'
+                elif n >= 80: old_let = 'B'
+                elif n >= 70: old_let = 'C'
+                elif n >= 60: old_let = 'D'
+                elif n > 0: old_let = 'F'
+            except: pass
+
+        new_weight = grade_weights.get(new_let, 0)
+        old_weight = grade_weights.get(old_let, 0)
         
-        # Si la nueva es mejor o si la vieja no tiene nota y la nueva sí
-        if new_let and (not old_let or new_weight > old_weight):
+        # Si la nueva es mejor o IGUAL pero de un periodo más reciente (asumiendo historial viene ordenado o usando ID)
+        if new_weight > old_weight:
             best_entries[code] = entry
-        elif not old_let and not new_let:
-             # Si ninguna tiene letra, comparar por número
-             try:
-                 new_num = float(entry.get('number', 0) or 0)
-                 old_num = float(existing.get('number', 0) or 0)
-                 if new_num > old_num:
-                     best_entries[code] = entry
-             except:
-                 pass
+        elif new_weight == old_weight and new_weight > 0:
+            # Si tienen la misma letra, preferimos la que tenga nota numérica más alta si existe
+            try:
+                new_num = float(entry.get('number', 0) or 0)
+                old_num = float(existing.get('number', 0) or 0)
+                if new_num > old_num:
+                    best_entries[code] = entry
+            except: pass
                  
     return list(best_entries.values())
 

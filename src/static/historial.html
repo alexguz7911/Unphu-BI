@@ -474,7 +474,8 @@
                         case 'B': pPoints = 3; isEvaluated = true; break;
                         case 'C': pPoints = 2; isEvaluated = true; break;
                         case 'D': pPoints = 1; isEvaluated = true; break;
-                        case 'F': pPoints = 0; isEvaluated = true; break;
+                        case 'F': 
+                        case 'FI': pPoints = 0; isEvaluated = true; break;
                     }
 
                     if (isEvaluated) {
@@ -572,37 +573,52 @@
             document.getElementById('kpiSubjectsPassed').textContent = totalSubjects;
             document.getElementById('totalSubjectsLabel').textContent = totalSubjects;
 
-            // Para el chart lo haremos cronológico (Viejo -> Reciente) porque en la gráfica X se lee de izquierda a derecha
-            // Como periods ahora está explícitamente ordenado (Nuevo -> Viejo), clonamos y hacemos reverse.
-            [...periods].reverse().forEach(period => {
-                const subjects = historyObj[period];
 
-                // Cumulative logic over time using the same rules!
-                let isCountable = false;
-                subjects.forEach(sub => {
-                    const c = sub.credits;
-                    let pPoints = 0;
-                    let isEvaluated = false;
-                    switch (sub.letter) {
-                        case 'A': pPoints = 4; isEvaluated = true; break;
-                        case 'B': pPoints = 3; isEvaluated = true; break;
-                        case 'C': pPoints = 2; isEvaluated = true; break;
-                        case 'D': pPoints = 1; isEvaluated = true; break;
-                        case 'F': pPoints = 0; isEvaluated = true; break;
-                    }
+            // ── GRÁFICA DE EVOLUCIÓN DEL ÍNDICE ─────────────────────────────────────────
+            // PRIORIDAD: Usar el historial de índices REAL de la API (index_history),
+            // que contiene el cumulativeIndex oficial de cada semestre.
+            // Solo si index_history está vacío, se hace el recálculo local (fallback).
 
-                    if (isEvaluated) {
-                        totalEvaluatedCreditsChart += c;
-                        totalHonorPointsChart += (pPoints * c);
-                        isCountable = true;
+            const apiIndexHistory = unphuData.index_history;
+
+            if (apiIndexHistory && apiIndexHistory.length > 0) {
+                // ✅ Camino correcto: datos reales de la API
+                periodLabelsForChart.length = 0;
+                gpaDataForChart.length = 0;
+                // Ya vienen ordenados cronológicamente (de viejo a nuevo) porque los generamos así
+                apiIndexHistory.forEach(entry => {
+                    periodLabelsForChart.push(entry.label);
+                    gpaDataForChart.push(entry.cumulativeIndex);
+                });
+            } else {
+                // ⚠️ Fallback: recálculo local desde el historial (puede no coincidir exactamente)
+                [...periods].reverse().forEach(period => {
+                    const subjects = historyObj[period];
+                    let isCountable = false;
+                    subjects.forEach(sub => {
+                        const c = sub.credits;
+                        let pPoints = 0;
+                        let isEvaluated = false;
+                        switch (sub.letter) {
+                            case 'A': pPoints = 4; isEvaluated = true; break;
+                            case 'B': pPoints = 3; isEvaluated = true; break;
+                            case 'C': pPoints = 2; isEvaluated = true; break;
+                            case 'D': pPoints = 1; isEvaluated = true; break;
+                            case 'F':
+                            case 'FI': pPoints = 0; isEvaluated = true; break;
+                        }
+                        if (isEvaluated) {
+                            totalEvaluatedCreditsChart += c;
+                            totalHonorPointsChart += (pPoints * c);
+                            isCountable = true;
+                        }
+                    });
+                    if (isCountable && totalEvaluatedCreditsChart > 0) {
+                        periodLabelsForChart.push(period);
+                        gpaDataForChart.push(Number((totalHonorPointsChart / totalEvaluatedCreditsChart).toFixed(2)));
                     }
                 });
-
-                if (isCountable && totalEvaluatedCreditsChart > 0) {
-                    periodLabelsForChart.push(period);
-                    gpaDataForChart.push(Number((totalHonorPointsChart / totalEvaluatedCreditsChart).toFixed(2)));
-                }
-            });
+            }
 
             // 5. Renderizar Gráfica
             if (periodLabelsForChart.length > 0) {
@@ -630,34 +646,20 @@
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: {
-                            legend: {
-                                display: false
-                            },
-                            tooltip: {
-                                mode: 'index',
-                                intersect: false,
-                            }
+                            legend: { display: false },
+                            tooltip: { mode: 'index', intersect: false }
                         },
                         scales: {
                             y: {
                                 beginAtZero: false,
                                 min: 2.0,
                                 max: 4.0,
-                                grid: {
-                                    color: 'rgba(0, 0, 0, 0.05)'
-                                },
-                                ticks: {
-                                    stepSize: 0.5
-                                }
+                                grid: { color: 'rgba(0, 0, 0, 0.05)' },
+                                ticks: { stepSize: 0.5 }
                             },
                             x: {
-                                grid: {
-                                    display: false
-                                },
-                                ticks: {
-                                    maxRotation: 45,
-                                    minRotation: 45
-                                }
+                                grid: { display: false },
+                                ticks: { maxRotation: 45, minRotation: 45 }
                             }
                         }
                     }
