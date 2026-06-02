@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>UNPHUSIST - Asignaturas Prematriculadas y Simulador</title>
+    <title>UNPHU BI - Asignaturas Prematriculadas y Simulador</title>
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%233D9744%22/><text x=%2250%22 y=%2272%22 font-family=%22Georgia, serif%22 font-size=%2265%22 font-weight=%22bold%22 fill=%22white%22 text-anchor=%22middle%22>U</text></svg>">
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
@@ -85,7 +85,7 @@
                 onclick="window.location.href='dashboard.html'">
                 <div class="w-8 h-8 flex items-center justify-center bg-white rounded-md text-[#001f3f] font-bold font-serif"
                     style="font-family: 'Georgia', serif;">U</div>
-                UNPHUSIST
+                UNPHU BI
             </div>
             <div
                 class="flex flex-wrap justify-center gap-3 md:gap-6 text-xs md:text-sm font-medium w-full md:w-auto mt-2 md:mt-0 order-last md:order-none">
@@ -100,17 +100,40 @@
             </div>
         </div>
         <div class="flex items-center gap-6">
-            <div class="flex items-center gap-3 text-right cursor-pointer"
-                onclick="window.location.href='dashboard.html'">
+            <div class="relative flex items-center gap-3 text-right cursor-pointer" id="userProfileArea" onclick="toggleLogoutMenu()">
                 <div class="hidden sm:flex flex-col">
                     <span class="text-sm font-semibold uppercase leading-tight" id="userName">Cargando...</span>
                     <span class="text-xs text-[#a9b5c2] lowercase leading-tight" id="userIdBox">...</span>
                 </div>
                 <div class="w-9 h-9 flex items-center justify-center rounded-full bg-[#0f9b58] font-bold text-sm border-2 border-white/20 text-white"
                     id="userAvatar">U</div>
+
+                <!-- Logout Dropdown -->
+                <div id="logoutMenu" style="display:none; position:absolute; top:calc(100% + 12px); right:0; background:white; border-radius:12px; box-shadow:0 8px 30px rgba(0,0,0,0.15); border:1px solid rgba(0,0,0,0.06); min-width:180px; z-index:1000; overflow:hidden; animation:dropIn 0.18s cubic-bezier(0.175,0.885,0.32,1.275);">
+                    <button onclick="event.stopPropagation(); cerrarSesion()" style="width:100%; display:flex; align-items:center; gap:10px; padding:12px 16px; background:none; border:none; cursor:pointer; font-size:13px; font-weight:600; color:#dc2626; text-align:left; transition:background 0.15s;" onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='none'">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                        Cerrar sesión
+                    </button>
+                </div>
             </div>
         </div>
     </nav>
+    <style>@keyframes dropIn { from { opacity:0; transform:translateY(-8px) scale(0.96); } to { opacity:1; transform:translateY(0) scale(1); } }</style>
+    <script>
+        function toggleLogoutMenu() {
+            var m = document.getElementById('logoutMenu');
+            m.style.display = m.style.display === 'none' ? 'block' : 'none';
+        }
+        function cerrarSesion() {
+            sessionStorage.clear();
+            window.location.href = '/';
+        }
+        document.addEventListener('click', function(e) {
+            var m = document.getElementById('logoutMenu');
+            var p = document.getElementById('userProfileArea');
+            if (m && p && !p.contains(e.target)) m.style.display = 'none';
+        });
+    </script>
 
     <main class="max-w-[1240px] mx-auto w-full px-4 lg:px-8 py-8 flex-1">
 

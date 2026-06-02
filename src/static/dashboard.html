@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UNPHUSIST-BI | Dashboard Salud Académica</title>
+    <title>UNPHU BI | Dashboard Salud Académica</title>
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%233D9744%22/><text x=%2250%22 y=%2272%22 font-family=%22Georgia, serif%22 font-size=%2265%22 font-weight=%22bold%22 fill=%22white%22 text-anchor=%22middle%22>U</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -910,7 +910,7 @@
         <div class="nav-left">
             <div class="logo-area">
                 <div class="logo-icon">U</div>
-                UNPHUSIST
+                UNPHU BI
             </div>
             <div class="nav-links">
                 <a href="#" class="active">Dashboard</a>
@@ -920,15 +920,53 @@
             </div>
         </div>
         <div class="nav-right">
-            <div class="user-profile">
-                <div class="user-info-text">
+            <div class="user-profile" style="position: relative;">
+                <div class="user-info-text" onclick="toggleLogoutMenu()" style="cursor:pointer;">
                     <span class="user-name" id="userName">Ana López</span>
                     <span class="user-id" id="userIdBox">ID: 21-0456</span>
                 </div>
-                <div class="avatar" id="userAvatar">A</div>
+                <div class="avatar" id="userAvatar" onclick="toggleLogoutMenu()" style="cursor:pointer;">A</div>
+
+                <!-- Logout Dropdown -->
+                <div id="logoutMenu" style="display:none; position:absolute; top:calc(100% + 12px); right:0; background:white; border-radius:12px; box-shadow:0 8px 30px rgba(0,0,0,0.12); border:1px solid rgba(0,0,0,0.06); min-width:180px; z-index:1000; overflow:hidden; animation:dropIn 0.18s cubic-bezier(0.175,0.885,0.32,1.275);">
+                    <button onclick="cerrarSesion()" style="width:100%; display:flex; align-items:center; gap:10px; padding:12px 16px; background:none; border:none; cursor:pointer; font-size:13px; font-weight:600; color:#dc2626; text-align:left; transition:background 0.15s;" onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='none'">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                            <polyline points="16 17 21 12 16 7"/>
+                            <line x1="21" y1="12" x2="9" y2="12"/>
+                        </svg>
+                        Cerrar sesión
+                    </button>
+                </div>
+
             </div>
         </div>
     </nav>
+
+    <style>
+        @keyframes dropIn {
+            from { opacity: 0; transform: translateY(-8px) scale(0.96); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+    </style>
+    <script>
+        function toggleLogoutMenu() {
+            var menu = document.getElementById('logoutMenu');
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        }
+        function cerrarSesion() {
+            sessionStorage.clear();
+            window.location.href = '/';
+        }
+        document.addEventListener('click', function(e) {
+            var menu = document.getElementById('logoutMenu');
+            var profile = document.querySelector('.user-profile');
+            if (menu && profile && !profile.contains(e.target)) {
+                menu.style.display = 'none';
+            }
+        });
+    </script>
+
 
     <!-- Main Content -->
     <div class="container">
@@ -1119,7 +1157,7 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
             </svg>
-            UNPHU Academic Health BI © 2023
+            Unphu BI © 2026
         </div>
         <div class="footer-links">
             <a href="#">Términos</a>
