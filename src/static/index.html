@@ -799,7 +799,7 @@
                 }
 
                 saveBtn.onclick = function() {
-                    var val = input.value.trim();
+                    var val = input.value.trim().replace(/^Bearer\s+/i, '');
                     if (!val) {
                         alert('Por favor ingresa un token válido.');
                         return;
