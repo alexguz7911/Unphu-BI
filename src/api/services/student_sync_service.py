@@ -215,8 +215,8 @@ class StudentSyncService:
 
             # 5. Período Actual y Selección
             periodo_actual = UnphuApiService.get_current_period()
-            ano_actual = datetime.datetime.now().year
-            num_periodo = 1
+            ano_actual = periodo_actual.get('year') or datetime.datetime.now().year
+            num_periodo = periodo_actual.get('id') or 1
 
             enrolled = UnphuApiService.get_officially_enrolled(ano_actual, num_periodo, str(id_persona), id_carrera)
             selected = UnphuApiService.get_unofficial_selected(ano_actual, num_periodo, str(id_persona), id_carrera)

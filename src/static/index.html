@@ -721,8 +721,9 @@
             var lastSemIndex = lastEntry.semesterIndex || realIndex;
 
             // 5. Materias actuales (en paralelo)
-            var anoActual = currentYear;
-            var numPeriodo = 1;
+            var activePeriodObj = (Array.isArray(currentPeriod) ? currentPeriod[0] : currentPeriod) || {};
+            var anoActual = activePeriodObj.year || currentYear;
+            var numPeriodo = activePeriodObj.id || 1;
             var [enrolled, selected] = await Promise.all([
                 unphuGet('/officially-enrolled-subjects/?Ano='+anoActual+'&IdPersona='+idPersona+'&IdPeriodo='+numPeriodo+'&IdCarrera='+idCarrera).then(function(d){ return Array.isArray(d)?d:[]; }),
                 unphuGet('/unofficial-selected-subjects/?Ano='+anoActual+'&IdPersona='+idPersona+'&IdPeriodo='+numPeriodo+'&IdCarrera='+idCarrera).then(function(d){ return Array.isArray(d)?d:[]; })

@@ -82,6 +82,8 @@ class UnphuApiService:
     def get_current_period() -> Dict[str, Any]:
         data = UnphuApiService._get(f'/get-current-period/')
         period_data = data.get('data', {})
-        if not isinstance(period_data, dict):
-            return {}
-        return period_data
+        if isinstance(period_data, list) and len(period_data) > 0:
+            return period_data[0]
+        if isinstance(period_data, dict):
+            return period_data
+        return {}
