@@ -518,19 +518,24 @@
                                     </span>`;
                     }
 
+                    let displayLetter = sub.letter || '-';
+                    if (displayLetter === 'CP') {
+                        displayLetter = '-';
+                    }
+
                     let letterBadge = '';
-                    if (sub.letter === 'A') {
+                    if (displayLetter === 'A') {
                         letterBadge = `<span class="px-2.5 py-1 rounded bg-accent-green text-white text-xs font-bold">A</span>`;
-                    } else if (sub.letter === 'B') {
+                    } else if (displayLetter === 'B') {
                         letterBadge = `<span class="px-2.5 py-1 rounded bg-primary text-white text-xs font-bold">B</span>`;
-                    } else if (sub.letter === 'C') {
+                    } else if (displayLetter === 'C') {
                         letterBadge = `<span class="px-2.5 py-1 rounded bg-yellow-500 text-white text-xs font-bold">C</span>`;
-                    } else if (sub.letter === 'F' || sub.status === 'Reprobado') {
-                        letterBadge = `<span class="px-2.5 py-1 rounded bg-red-500 text-white text-xs font-bold">${sub.letter || 'F'}</span>`;
-                    } else if (sub.letter === 'R') {
+                    } else if (displayLetter === 'F' || sub.status === 'Reprobado') {
+                        letterBadge = `<span class="px-2.5 py-1 rounded bg-red-500 text-white text-xs font-bold">${displayLetter}</span>`;
+                    } else if (displayLetter === 'R') {
                         letterBadge = `<span class="px-2.5 py-1 rounded bg-slate-300 text-slate-700 text-xs font-bold">R</span>`;
                     } else {
-                        letterBadge = `<span class="px-2.5 py-1 rounded bg-slate-200 text-slate-700 text-xs font-bold">${sub.letter || '-'}</span>`;
+                        letterBadge = `<span class="px-2.5 py-1 rounded bg-slate-200 text-slate-700 text-xs font-bold">${displayLetter}</span>`;
                     }
 
                     tableRowsContent += `
