@@ -1,63 +1,49 @@
 from flask import Blueprint, request, jsonify # type: ignore
 from google.oauth2 import id_token # type: ignore
 from google.auth.transport import requests as google_requests # type: ignore
-from src.config.settings import GOOGLE_CLIENT_ID
-from src.api.services.unphu_api import UnphuApiService
-from src.api.services.student_transformer import calculate_credits_evaluated, parse_prerequisites, build_history_by_period
-from src.db.data_warehouse import DataWareHouseSync
-from typing import Any, Dict
+from src.config.settings import GOOGLE_CLIENT_ID, UNPHU_API_TOKEN, UNPHU_API_BASE_URL
 
 auth_bp = Blueprint('auth_routes', __name__)
 
 @auth_bp.route('/auth/google', methods=['POST', 'OPTIONS'])
 def auth_google():
+    """
+    Verifica el token de Google y devuelve las credenciales necesarias
+    para que el cliente llame directamente a la API de la UNPHU.
+    Las llamadas a la API de la UNPHU se hacen desde el navegador del estudiante
+    (en RD) para evitar restricciones de IP en los servidores de Vercel (EE.UU.).
+    """
     data = request.json
     if not data: return jsonify({"error": "No data"}), 400
     token = data.get('token')
-    
+
     if not token:
         return jsonify({"error": "Token no proporcionado"}), 400
 
     try:
-        # 1. Validar el token con los servidores de Google (con margen de 10s para el reloj)
-        idinfo = id_token.verify_oauth2_token(token, google_requests.Request(), GOOGLE_CLIENT_ID, clock_skew_in_seconds=10)
-        
+        # Validar el token con los servidores de Google
+        idinfo = id_token.verify_oauth2_token(
+            token, google_requests.Request(), GOOGLE_CLIENT_ID, clock_skew_in_seconds=10
+        )
+
         email = idinfo.get('email')
         nombre = idinfo.get('name')
-        
-        # 2. FILTRO DE SEGURIDAD INSTITUCIONAL
+
+        # Filtro de seguridad institucional
         if not email.endswith("@unphu.edu.do"):
             print(f"INTENTO DE ACCESO DENEGADO: {email}")
             return jsonify({"error": "Acceso restringido a correos institucionales de la UNPHU"}), 403
-            
-        # Extraer matrícula del correo
+
         matricula = email.split('@')[0]
-        
-        # 3. CONSUMIR API SERVICES DE LA UNPHU Y SINCRONIZAR (Orquestado por StudentSyncService)
-        from src.api.services.student_sync_service import StudentSyncService
-        api_data = StudentSyncService.fetch_and_sync_all(matricula, nombre)
-        
-        if not api_data:
-            return jsonify({"error": "No se pudo conectar con el sistema base de la UNPHU. Intente nuevamente en breves momentos."}), 502
-            
-        # Sincronización PROFUNDA hacia PostgreSQL usando un Worker Thread en 2do plano
-        from src.api.services.background_worker import enqueue_student_sync
-        import re
-        id_persona_val = int(re.search(r'\d+', matricula.replace('-','')).group()) if re.search(r'\d+', matricula.replace('-','')) else 0
-        
-        enqueue_student_sync(str(id_persona_val), api_data.get('id_carrera', '0'), matricula, nombre, api_data)
 
-        # Calcular ranking del DW y añadir a la data para la GUI
-        api_data['ranking'] = DataWareHouseSync.get_student_ranking(matricula)
-
-        import json
-        print(f"[DEBUG] api_data completo enviado al frontend:\n{json.dumps(api_data, indent=2, default=str)}")
+        # Devolver credenciales para que el cliente llame a la API de la UNPHU directamente
         return jsonify({
             "success": True,
             "message": "Autenticación exitosa",
             "matricula": matricula,
             "name": nombre,
-            "api_data": api_data
+            "unphu_token": UNPHU_API_TOKEN,
+            "unphu_api_url": UNPHU_API_BASE_URL
         })
 
     except ValueError as e:
@@ -68,3 +54,33 @@ def auth_google():
         import traceback
         traceback.print_exc()
         return jsonify({"error": "Error interno del servidor", "details": str(e)}), 500
+
+
+@auth_bp.route('/api/sync', methods=['POST'])
+def sync_student_data():
+    """
+    Recibe los datos procesados del cliente y los sincroniza con el Data Warehouse (PostgreSQL).
+    Llamada opcional/asíncrona desde el navegador después del login.
+    """
+    data = request.json
+    if not data:
+        return jsonify({"ok": False}), 400
+
+    try:
+        matricula = data.get('matricula', '')
+        nombre = data.get('nombre', '')
+        id_carrera = data.get('id_carrera', '0')
+        api_data = data.get('api_data', {})
+
+        if not matricula or not api_data:
+            return jsonify({"ok": False, "error": "Datos insuficientes"}), 400
+
+        from src.db.data_warehouse import DataWareHouseSync
+        DataWareHouseSync.sync_student_login(api_data, matricula, nombre, id_carrera)
+        ranking = DataWareHouseSync.get_student_ranking(matricula)
+
+        return jsonify({"ok": True, "ranking": ranking})
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"ok": False, "error": str(e)}), 500

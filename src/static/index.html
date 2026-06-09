@@ -443,13 +443,11 @@
         }
 
         window.onload = function () {
-            // Si la URL es /callback mostrar la pantalla de carga de inmediato
             var isCallback = window.location.pathname === '/callback';
             if (isCallback) {
                 document.getElementById('loading-screen').classList.add('visible');
             }
 
-            // Verificar si venimos de OAuth con un token fragment
             var fragmentString = location.hash.substring(1);
             if (fragmentString.length > 0) {
                 var params = {};
@@ -457,11 +455,8 @@
                 while (m = regex.exec(fragmentString)) {
                     params[decodeURIComponent(m[1])] = decodeURIComponent(m[2]);
                 }
-
                 if (params['id_token']) {
-                    // Mostrar pantalla de carga si no está ya visible
                     document.getElementById('loading-screen').classList.add('visible');
-                    // Limpia la URL haciéndola ver bella de nuevo
                     window.history.replaceState(null, null, window.location.pathname);
                     handleCredentialResponse({ credential: params['id_token'] });
                 }
@@ -470,11 +465,9 @@
 
         function oauthSignIn() {
             var oauth2Endpoint = 'https://accounts.google.com/o/oauth2/v2/auth';
-
             var form = document.createElement('form');
             form.setAttribute('method', 'GET');
             form.setAttribute('action', oauth2Endpoint);
-
             var params = {
                 'client_id': '88334184799-pimhmhk8fvar5mpttnko7dlvljl21o4i.apps.googleusercontent.com',
                 'redirect_uri': window.location.origin + '/callback',
@@ -484,7 +477,6 @@
                 'state': 'pass-through value',
                 'nonce': Math.random().toString(36).substring(2)
             };
-
             for (var p in params) {
                 var input = document.createElement('input');
                 input.setAttribute('type', 'hidden');
@@ -496,52 +488,317 @@
             form.submit();
         }
 
-        function handleCredentialResponse(response) {
-            console.log("Token procesado por vía Redirect de Google, enviando al backend...");
+        // ── Transformadores de datos (equivalentes al Python) ──────
 
-            // Animar paso 2 → activo
+        function deduplicateHistory(historial) {
+            if (!historial || historial.length === 0) return [];
+            var gradeWeights = { 'A': 10, 'B': 9, 'C': 8, 'D': 7, 'EX': 6, 'AP': 5, 'F': 4, 'FI': 4, 'R': 1, 'W': 1 };
+            var bestEntries = {};
+            for (var i = 0; i < historial.length; i++) {
+                var entry = historial[i];
+                var code = (entry.codeSubject || '').trim();
+                if (!code) continue;
+                if (!(code in bestEntries)) { bestEntries[code] = entry; continue; }
+                var existing = bestEntries[code];
+                var newLet = (entry.lyrics || '').toUpperCase().trim();
+                var oldLet = (existing.lyrics || '').toUpperCase().trim();
+                if (!newLet) {
+                    var n = parseFloat(entry.number || 0);
+                    newLet = n >= 90 ? 'A' : n >= 80 ? 'B' : n >= 70 ? 'C' : n >= 60 ? 'D' : n > 0 ? 'F' : '';
+                }
+                if (!oldLet) {
+                    var o = parseFloat(existing.number || 0);
+                    oldLet = o >= 90 ? 'A' : o >= 80 ? 'B' : o >= 70 ? 'C' : o >= 60 ? 'D' : o > 0 ? 'F' : '';
+                }
+                var nw = gradeWeights[newLet] || 0;
+                var ow = gradeWeights[oldLet] || 0;
+                if (nw > ow) { bestEntries[code] = entry; }
+                else if (nw === ow && nw > 0) {
+                    if (parseFloat(entry.number || 0) > parseFloat(existing.number || 0)) bestEntries[code] = entry;
+                }
+            }
+            return Object.values(bestEntries);
+        }
+
+        function calculateCreditsEvaluated(historial) {
+            var evaluated = ['A', 'B', 'C', 'D', 'F', 'FI'];
+            var total = 0;
+            for (var i = 0; i < historial.length; i++) {
+                var h = historial[i];
+                var let_ = (h.lyrics || '').trim();
+                if (evaluated.indexOf(let_) !== -1) {
+                    total += parseInt(parseFloat(h.credits || 0)) || 0;
+                }
+            }
+            return total;
+        }
+
+        function buildHistoryByPeriod(historial) {
+            var byPeriod = {};
+            var seenInPeriod = {};
+            for (var i = 0; i < historial.length; i++) {
+                var s = historial[i];
+                var per = (s.semester || '').toString().trim();
+                if (!per) continue;
+                var code = (s.codeSubject || '').trim();
+                var let_ = (s.lyrics || '').trim();
+                var num  = (s.number || '').toString().trim();
+                var obs  = (s.observations || '').trim();
+                if (!(let_ || num || obs)) continue;
+                if (!byPeriod[per]) { byPeriod[per] = []; seenInPeriod[per] = {}; }
+                if (code && seenInPeriod[per][code]) continue;
+                if (code) seenInPeriod[per][code] = true;
+                var status = 'Cursando';
+                if (['A','B','C'].indexOf(let_) !== -1 || obs === 'AP' || obs === 'EX') status = 'Aprobado';
+                else if (['D','F','FI'].indexOf(let_) !== -1 || obs === 'RP') status = 'Reprobado';
+                else if (let_ === 'R') status = 'Retirado';
+                var cRaw = s.credits;
+                var cVal = 0;
+                try { cVal = parseInt(parseFloat(cRaw)) || 0; } catch(e) {}
+                byPeriod[per].push({ code: code, name: (s.subject || '').trim(), credits: cVal, grade: num, letter: let_, obs: obs, status: status });
+            }
+            // Ordenar períodos (más reciente primero)
+            function getSortKey(p) {
+                var upper = p.toUpperCase();
+                var m = upper.match(/(ENE|MAY|SEP|AGO|DIC|ABR).*?(\d{4})/);
+                if (m) {
+                    var yr = parseInt(m[2]);
+                    var mo = ({'ENE':1,'ABR':1,'MAY':2,'AGO':2,'SEP':3,'DIC':3})[m[1]] || 0;
+                    return yr * 10 + mo;
+                }
+                var nm = upper.match(/\d+/);
+                return nm ? parseInt(nm[0]) : 0;
+            }
+            var sorted = {};
+            Object.keys(byPeriod).sort(function(a,b){ return getSortKey(b) - getSortKey(a); }).forEach(function(k){ sorted[k] = byPeriod[k]; });
+            return sorted;
+        }
+
+        function parsePrerequisites(pendingList) {
+            var prereqCounts = {};
+            for (var i = 0; i < pendingList.length; i++) {
+                var codeReq = (pendingList[i].codeRequired || '').replace(/ o /g, ' y ');
+                var reqs = codeReq.split(/[,y]/).map(function(r){ return r.trim(); }).filter(Boolean);
+                reqs.forEach(function(r){ prereqCounts[r] = (prereqCounts[r] || 0) + 1; });
+            }
+            for (var j = 0; j < pendingList.length; j++) {
+                var s = pendingList[j];
+                var code = (s.codeSubject || '').trim();
+                s.unlocks = prereqCounts[code] || 0;
+                s.code = code;
+                s.name = (s.subject || '').trim();
+            }
+            pendingList.sort(function(a,b){ return (b.unlocks||0) - (a.unlocks||0); });
+            return pendingList;
+        }
+
+        // ── Llamadas directas a la API de UNPHU desde el navegador ─
+
+        async function fetchUnphuData(matricula, nombre, unphuToken, unphuApiUrl) {
+            var headers = { 'Authorization': 'Bearer ' + unphuToken };
+
+            async function unphuGet(endpoint) {
+                try {
+                    var resp = await fetch(unphuApiUrl + endpoint, { headers: headers });
+                    if (!resp.ok) return null;
+                    var json = await resp.json();
+                    return json.data !== undefined ? json.data : json;
+                } catch(e) {
+                    console.warn('[UNPHU API] Error en ' + endpoint, e);
+                    return null;
+                }
+            }
+
+            // 1. Datos básicos del estudiante
+            var studentData = await unphuGet('/student-data/' + matricula);
+            if (!studentData || Object.keys(studentData).length === 0) {
+                throw new Error('No se pudo conectar con el sistema base de la UNPHU. Intente nuevamente.');
+            }
+
+            var idPersona = studentData.id || parseInt((matricula.replace(/\D/g,''))) || 0;
+
+            // 2. Carreras y período actual (en paralelo)
+            var [careersRaw, currentPeriod] = await Promise.all([
+                unphuGet('/get-student-careers/?IdPersona=' + idPersona),
+                unphuGet('/get-current-period/')
+            ]);
+
+            var careers = Array.isArray(careersRaw) ? careersRaw : [];
+            var activeCareer = careers[0] || {};
+            var idCarrera = String(activeCareer.IdCarrera || '0');
+
+            // 3. Historial pendiente por carrera (en paralelo)
+            var histArrays = await Promise.all(careers.map(function(car) {
+                return unphuGet('/pending-grades-students/?IdPersona=' + idPersona + '&IdCarrera=' + car.IdCarrera)
+                    .then(function(h){ return Array.isArray(h) ? h : []; });
+            }));
+
+            var allHistory = [].concat.apply([], histArrays).filter(function(h) {
+                return (h.codeSubject || '').trim() !== 'INF-158-L' && String(h.semester || '').trim() !== '99';
+            });
+
+            var historial = deduplicateHistory(allHistory);
+
+            // Calcular estadísticas
+            var maxApproved = 0, maxPensum = 0;
+            var approvedGrades = ['A','B','C','D','EX','AP'];
+            var creditosEvaluados = calculateCreditsEvaluated(allHistory);
+
+            for (var i = 0; i < historial.length; i++) {
+                var h = historial[i];
+                if (approvedGrades.indexOf((h.lyrics||'').trim()) !== -1) {
+                    maxApproved += parseInt(parseFloat(h.credits||0)) || 0;
+                }
+                var pc = parseInt(parseFloat(h.pensumCredit||0)) || 0;
+                if (pc > maxPensum) maxPensum = pc;
+            }
+
+            // 4. Historial de índices por período (en paralelo, en lotes)
+            var startYearMatch = matricula.match(/[a-zA-Z]+(\d{2})-/);
+            var startYear = startYearMatch ? (2000 + parseInt(startYearMatch[1])) : 2020;
+            var currentYear = new Date().getFullYear();
+            var PERIOD_LABELS = {1:'ENE-ABR', 2:'MAY-AGO', 3:'SEP-DIC'};
+
+            var allPeriods = [];
+            for (var yr = startYear; yr <= currentYear; yr++) {
+                for (var per = 1; per <= 3; per++) {
+                    allPeriods.push({yr: yr, per: per});
+                }
+            }
+
+            var seenLabels = {};
+            var indexHistory = [];
+            var BATCH = 15;
+
+            for (var b = 0; b < allPeriods.length; b += BATCH) {
+                var batch = allPeriods.slice(b, b + BATCH);
+                var batchPromises = [];
+                batch.forEach(function(p) {
+                    careers.forEach(function(car) {
+                        var url = '/semester-grades/?Ano=' + p.yr + '&IdPersona=' + idPersona + '&IdPeriodo=' + p.per + '&IdCarrera=' + car.IdCarrera;
+                        batchPromises.push(unphuGet(url).then(function(grades) {
+                            return { yr: p.yr, per: p.per, grades: Array.isArray(grades) ? grades : [] };
+                        }));
+                    });
+                });
+                var batchResults = await Promise.all(batchPromises);
+                batchResults.forEach(function(r) {
+                    if (r.grades.length > 0) {
+                        var cum = parseFloat(r.grades[0].cumulativeIndex || 0);
+                        if (cum > 0.1) {
+                            var label = (PERIOD_LABELS[r.per] || 'PER-' + r.per) + '-' + r.yr;
+                            if (!seenLabels[label]) {
+                                seenLabels[label] = true;
+                                var sem = parseFloat(r.grades[0].semesterIndex || r.grades[0].periodIndex || cum);
+                                indexHistory.push({ label: label, cumulativeIndex: Math.round(cum*100)/100, semesterIndex: Math.round(sem*100)/100, year: r.yr, period: r.per });
+                            }
+                        }
+                    }
+                });
+            }
+
+            indexHistory.sort(function(a,b){ return a.year !== b.year ? a.year-b.year : a.period-b.period; });
+            var lastEntry = indexHistory[indexHistory.length - 1] || {};
+            var realIndex = lastEntry.cumulativeIndex || 0;
+            var lastSemIndex = lastEntry.semesterIndex || realIndex;
+
+            // 5. Materias actuales (en paralelo)
+            var anoActual = currentYear;
+            var numPeriodo = 1;
+            var [enrolled, selected] = await Promise.all([
+                unphuGet('/officially-enrolled-subjects/?Ano='+anoActual+'&IdPersona='+idPersona+'&IdPeriodo='+numPeriodo+'&IdCarrera='+idCarrera).then(function(d){ return Array.isArray(d)?d:[]; }),
+                unphuGet('/unofficial-selected-subjects/?Ano='+anoActual+'&IdPersona='+idPersona+'&IdPeriodo='+numPeriodo+'&IdCarrera='+idCarrera).then(function(d){ return Array.isArray(d)?d:[]; })
+            ]);
+
+            var pendingList = historial.filter(function(h){
+                return !((h.lyrics||'').trim() || (h.number||'').toString().trim() || (h.observations||'').trim());
+            });
+
+            return {
+                matricula: studentData.username || matricula,
+                carrera: studentData.career || '',
+                nombre: nombre,
+                id_carrera: idCarrera,
+                stats: {
+                    creditosAprobados: maxApproved,
+                    creditosEvaluados: creditosEvaluados,
+                    totalCreditos: maxPensum,
+                    materiasAprobadas: maxApproved ? Math.floor(maxApproved / 3) : 0
+                },
+                pending_subjects: parsePrerequisites(pendingList),
+                history: buildHistoryByPeriod(historial),
+                index_history: indexHistory,
+                indices: { semesterIndex: Math.round(lastSemIndex*100)/100, cumulativeIndex: Math.round(realIndex*100)/100 },
+                current_period: currentPeriod ? [currentPeriod] : [],
+                registered_subjects: enrolled,
+                selected_subjects: selected,
+                ranking: { rank: '--', total: '--', average: 0 }
+            };
+        }
+
+        // ── Flujo principal de autenticación ──────────────────────
+
+        async function handleCredentialResponse(response) {
+            console.log('Token de Google recibido, verificando con backend...');
             setStepDone('step2');
             setStepActive('step3');
 
-            fetch('/auth/google', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token: response.credential })
-            })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.error) {
-                        // Ocultar pantalla de carga y mostrar error
-                        document.getElementById('loading-screen').classList.remove('visible');
-                        alert("ERROR: " + data.error);
-                    } else {
-                        // Animar paso 3 y 4 antes de redirigir
-                        setStepDone('step3');
-                        setStepActive('step4');
-
-                        // Guardar nombre y datos de UNPHU en sesión temporal
-                        sessionStorage.setItem('userName', data.name);
-
-                        if (data.api_data) {
-                            sessionStorage.setItem('unphuData', JSON.stringify(data.api_data));
-                        }
-
-                        // Pequeña pausa para que el usuario vea el paso final animado
-                        setTimeout(function () {
-                            setStepDone('step4');
-                            setTimeout(function () {
-                                window.location.href = "dashboard.html";
-                            }, 400);
-                        }, 600);
-                    }
-                })
-                .catch(err => {
-                    console.error("Error de conexión:", err);
-                    document.getElementById('loading-screen').classList.remove('visible');
-                    alert("No se pudo conectar con el servidor backend (Flask).");
+            try {
+                // Paso 1: verificar token con Flask (solo verifica Google, sin llamar a UNPHU)
+                var authResp = await fetch('/auth/google', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token: response.credential })
                 });
+                var authData = await authResp.json();
+
+                if (authData.error) {
+                    document.getElementById('loading-screen').classList.remove('visible');
+                    alert('ERROR: ' + authData.error);
+                    return;
+                }
+
+                var { matricula, name, unphu_token, unphu_api_url } = authData;
+
+                // Paso 2: llamar a la API de UNPHU directamente desde el navegador
+                var apiData = await fetchUnphuData(matricula, name, unphu_token, unphu_api_url);
+
+                setStepDone('step3');
+                setStepActive('step4');
+
+                // Guardar datos en sesión
+                sessionStorage.setItem('userName', name);
+                sessionStorage.setItem('unphuData', JSON.stringify(apiData));
+
+                // Paso 3 (en segundo plano): sincronizar con Data Warehouse
+                fetch('/api/sync', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ matricula: matricula, nombre: name, id_carrera: apiData.id_carrera, api_data: apiData })
+                }).then(function(r){ return r.json(); }).then(function(syncData){
+                    if (syncData.ok && syncData.ranking) {
+                        // Actualizar ranking si el DW respondió
+                        try {
+                            var stored = JSON.parse(sessionStorage.getItem('unphuData') || '{}');
+                            stored.ranking = syncData.ranking;
+                            sessionStorage.setItem('unphuData', JSON.stringify(stored));
+                        } catch(e) {}
+                    }
+                }).catch(function(e){ console.warn('DW sync failed (non-critical):', e); });
+
+                // Redirigir al dashboard
+                setTimeout(function() {
+                    setStepDone('step4');
+                    setTimeout(function() { window.location.href = 'dashboard.html'; }, 400);
+                }, 600);
+
+            } catch(err) {
+                console.error('Error durante el proceso de login:', err);
+                document.getElementById('loading-screen').classList.remove('visible');
+                alert('ERROR: ' + (err.message || 'No se pudo completar el inicio de sesión.'));
+            }
         }
     </script>
 </body>
 
-</html>
+</html>
