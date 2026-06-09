@@ -468,9 +468,17 @@
             var form = document.createElement('form');
             form.setAttribute('method', 'GET');
             form.setAttribute('action', oauth2Endpoint);
+
+            // Siempre usar el dominio canónico de producción para evitar redirect_uri_mismatch
+            // cuando Vercel genera URLs de deployment únicas (unphu-xxxxx.vercel.app)
+            var canonicalOrigin = 'https://unphu-bi.vercel.app';
+            var redirectUri = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+                ? window.location.origin + '/callback'
+                : canonicalOrigin + '/callback';
+
             var params = {
                 'client_id': '88334184799-pimhmhk8fvar5mpttnko7dlvljl21o4i.apps.googleusercontent.com',
-                'redirect_uri': window.location.origin + '/callback',
+                'redirect_uri': redirectUri,
                 'response_type': 'token id_token',
                 'scope': 'openid email profile',
                 'include_granted_scopes': 'true',
