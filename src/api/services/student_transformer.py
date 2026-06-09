@@ -57,6 +57,10 @@ def build_history_by_period(historial: List[Dict[str, Any]]) -> Dict[str, List[D
         num = str(subject.get('number', '')).strip()
         obs = str(subject.get('observations', '')).strip()
         
+        # Mapear convalidaciones (CV)
+        if obs == 'CV':
+            let = 'CV'
+        
         # Si tiene literal, número u observación, ya fue cursada
         if let or num or obs:
             if per not in history_by_period:
@@ -70,7 +74,7 @@ def build_history_by_period(historial: List[Dict[str, Any]]) -> Dict[str, List[D
                 seen_subject_codes_in_period[per].add(code)
                 
             status = "Cursando"
-            if let in ['A', 'B', 'C'] or obs in ['AP', 'EX']:
+            if let in ['A', 'B', 'C', 'CV'] or obs in ['AP', 'EX', 'CV']:
                 status = "Aprobado"
             elif let in ['D', 'F', 'FI'] or obs == 'RP':
                 status = "Reprobado"
@@ -134,7 +138,7 @@ def deduplicate_history(historial: List[Dict[str, Any]]) -> List[Dict[str, Any]]
     # Mapeo de valores de notas literales para comparación
     # Prioridad: A(4) > B(3) > C(2) > D(1) > EX/AP(Passing but no GPA) > F/FI(0) > R/W(Neutral)
     grade_weights = {
-        'A': 10, 'B': 9, 'C': 8, 'D': 7, 'EX': 6, 'AP': 5, 'F': 4, 'FI': 4, 'R': 1, 'W': 1
+        'A': 10, 'B': 9, 'C': 8, 'D': 7, 'EX': 6, 'AP': 5, 'CV': 5, 'F': 4, 'FI': 4, 'R': 1, 'W': 1
     }
 
     for entry in historial:

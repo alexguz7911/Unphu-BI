@@ -502,7 +502,7 @@
 
         function deduplicateHistory(historial) {
             if (!historial || historial.length === 0) return [];
-            var gradeWeights = { 'A': 10, 'B': 9, 'C': 8, 'D': 7, 'EX': 6, 'AP': 5, 'F': 4, 'FI': 4, 'R': 1, 'W': 1 };
+            var gradeWeights = { 'A': 10, 'B': 9, 'C': 8, 'D': 7, 'EX': 6, 'AP': 5, 'CV': 5, 'F': 4, 'FI': 4, 'R': 1, 'W': 1 };
             var bestEntries = {};
             for (var i = 0; i < historial.length; i++) {
                 var entry = historial[i];
@@ -559,7 +559,7 @@
                 if (code && seenInPeriod[per][code]) continue;
                 if (code) seenInPeriod[per][code] = true;
                 var status = 'Cursando';
-                if (['A','B','C'].indexOf(let_) !== -1 || obs === 'AP' || obs === 'EX') status = 'Aprobado';
+                if (['A','B','C','CV'].indexOf(let_) !== -1 || obs === 'AP' || obs === 'EX' || obs === 'CV') status = 'Aprobado';
                 else if (['D','F','FI'].indexOf(let_) !== -1 || obs === 'RP') status = 'Reprobado';
                 else if (let_ === 'R') status = 'Retirado';
                 var cRaw = s.credits;
@@ -655,11 +655,18 @@
                 return (h.codeSubject || '').trim() !== 'INF-158-L' && String(h.semester || '').trim() !== '99';
             });
 
+            // Mapear convalidaciones (CV) antes de deduplicar y calcular aprobadas
+            allHistory.forEach(function(h) {
+                if ((h.observations || '').trim() === 'CV') {
+                    h.lyrics = 'CV';
+                }
+            });
+
             var historial = deduplicateHistory(allHistory);
 
             // Calcular estadísticas
             var maxApproved = 0, maxPensum = 0;
-            var approvedGrades = ['A','B','C','D','EX','AP'];
+            var approvedGrades = ['A','B','C','D','EX','AP','CV'];
             var creditosEvaluados = calculateCreditsEvaluated(allHistory);
 
             for (var i = 0; i < historial.length; i++) {
