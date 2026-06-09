@@ -612,15 +612,23 @@
                     var json = await resp.json();
                     return json.data !== undefined ? json.data : json;
                 } catch(e) {
-                    console.warn('[UNPHU API] Error en ' + endpoint, e);
+                    console.warn('[UNPHU API] Error en ' + endpoint + ':', e.name, e.message);
                     return null;
                 }
             }
 
             // 1. Datos básicos del estudiante
-            var studentData = await unphuGet('/student-data/' + matricula);
+            var studentData = null;
+            try {
+                studentData = await unphuGet('/student-data/' + matricula);
+            } catch(e) {
+                throw new Error('Error de red al contactar API UNPHU: ' + e.message);
+            }
+
             if (!studentData || Object.keys(studentData).length === 0) {
-                throw new Error('No se pudo conectar con el sistema base de la UNPHU. Intente nuevamente.');
+                // Intentar detectar si es CORS probando sin Authorization header
+                var testMsg = 'No se pudo conectar con el sistema base de la UNPHU.\n\nPosibles causas:\n- Error CORS (abre F12 > Console para ver el error exacto)\n- API UNPHU no accesible desde tu red actual\n\nRevisar consola del navegador para más detalles.';
+                throw new Error(testMsg);
             }
 
             var idPersona = studentData.id || parseInt((matricula.replace(/\D/g,''))) || 0;
