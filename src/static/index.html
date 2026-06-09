@@ -386,29 +386,7 @@
         </div>
     </div>
 
-    <!-- ── TOKEN MODAL ───────── -->
-    <div id="token-modal" style="display: none; position: fixed; inset: 0; z-index: 10000; background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); align-items: center; justify-content: center;">
-        <div class="login-card" style="max-width: 460px; width: 95%; padding: 2.5rem; text-align: left; background: rgba(255, 255, 255, 0.95);">
-            <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 1rem; color: var(--text-dark);">Token de la UNPHU Requerido</h2>
-            <p style="font-size: 13.5px; margin-bottom: 1.5rem; text-align: left; color: var(--text-muted); line-height: 1.5;">Para sincronizar tus datos académicos directamente desde el navegador, por favor ingresa tu token de acceso de la UNPHU.</p>
-            
-            <div style="background: rgba(61,151,68,0.08); border-left: 4px solid var(--primary-green); padding: 0.85rem 1rem; border-radius: 8px; font-size: 12px; margin-bottom: 1.5rem; line-height: 1.6; color: #2e5c33;">
-                <strong>¿Cómo obtener tu token?</strong><br>
-                1. Abre el <a href="https://estudiantes.unphu.edu.do" target="_blank" style="color: var(--primary-dark); font-weight: 600; text-decoration: underline;">Portal de Estudiantes UNPHU</a> e inicia sesión.<br>
-                2. Presiona <strong>F12</strong> (o Clic Derecho ➔ Inspeccionar) y ve a la pestaña <strong>Consola</strong>.<br>
-                3. Ejecuta el siguiente comando:<br>
-                <code style="background: rgba(255,255,255,0.7); padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 4px; font-family: monospace; font-weight: bold;">localStorage.getItem('token')</code><br>
-                4. Copia el texto resultante (comienza con <em>"eyJ..."</em>) y pégalo abajo.
-            </div>
 
-            <textarea id="token-input" placeholder="Pega tu token JWT aquí..." style="width: 100%; height: 110px; padding: 0.75rem; border-radius: 12px; border: 1px solid #c4ddc7; font-family: monospace; font-size: 11.5px; resize: none; margin-bottom: 1.5rem; outline: none; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); transition: border-color 0.2s;"></textarea>
-            
-            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
-                <button id="token-cancel-btn" style="background: #e1e8e2; color: var(--text-dark); border: none; padding: 0.65rem 1.25rem; border-radius: 10px; font-weight: 600; font-size: 13.5px; cursor: pointer; transition: background 0.2s;">Cancelar</button>
-                <button id="token-save-btn" style="background: var(--primary-green); color: white; border: none; padding: 0.65rem 1.25rem; border-radius: 10px; font-weight: 600; font-size: 13.5px; cursor: pointer; box-shadow: 0 4px 12px rgba(61,151,68,0.25); transition: background 0.2s;">Guardar y Continuar</button>
-            </div>
-        </div>
-    </div>
 
     <div class="shape shape-1"></div>
     <div class="shape shape-2"></div>
@@ -835,47 +813,10 @@
                     return;
                 }
 
-                var { matricula, name, unphu_api_url } = authData;
+                var { matricula, name, unphu_token, unphu_api_url } = authData;
 
-                // Intentar recuperar el token guardado del estudiante en localStorage
-                var studentToken = localStorage.getItem('unphu_token_' + matricula);
-                var apiData = null;
-
-                while (true) {
-                    if (!studentToken) {
-                        try {
-                            // Ocultar loading screen temporalmente mientras ingresa el token
-                            document.getElementById('loading-screen').classList.remove('visible');
-                            studentToken = await promptForToken(matricula);
-                            // Volver a mostrar loading screen al continuar
-                            document.getElementById('loading-screen').classList.add('visible');
-                        } catch (err) {
-                            document.getElementById('loading-screen').classList.remove('visible');
-                            alert(err.message);
-                            return;
-                        }
-                    }
-
-                    try {
-                        // Paso 2: llamar a la API de UNPHU directamente desde el navegador con el token del estudiante
-                        apiData = await fetchUnphuData(matricula, name, studentToken, unphu_api_url);
-                        
-                        if (apiData && Object.keys(apiData).length > 0) {
-                            // Token exitoso! Guardar en localStorage
-                            localStorage.setItem('unphu_token_' + matricula, studentToken);
-                            break;
-                        } else {
-                            // Si devolvió objeto vacío pero sin lanzar excepción, asumimos token inválido
-                            localStorage.removeItem('unphu_token_' + matricula);
-                            studentToken = null;
-                            alert('El token ingresado no es válido o ya expiró. Por favor ingresa uno nuevo.');
-                        }
-                    } catch (err) {
-                        localStorage.removeItem('unphu_token_' + matricula);
-                        studentToken = null;
-                        alert('Error al validar el token de la UNPHU: ' + err.message + '\n\nPor favor intenta con un token nuevo.');
-                    }
-                }
+                // Paso 2: llamar a la API de UNPHU directamente desde el navegador usando el token devuelto por el servidor
+                var apiData = await fetchUnphuData(matricula, name, unphu_token, unphu_api_url);
 
                 setStepDone('step3');
                 setStepActive('step4');
