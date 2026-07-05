@@ -150,7 +150,8 @@ class StudentSyncService:
 
                     for h in historial:
                         let = str(h.get('lyrics', '')).strip()
-                        if let in ['A', 'B', 'C', 'D', 'EX', 'AP']:
+                        # 'AP' = Aprendizaje por Práctica (en curso), 'T' no es calificación → no cuentan como aprobados
+                        if let in ['A', 'B', 'C', 'D', 'EX', 'CV']:
                             max_approved += safe_get_int(h, 'credits')
 
                     max_pensum = max((safe_get_int(h, 'pensumCredit') for h in historial), default=0)
@@ -164,11 +165,18 @@ class StudentSyncService:
                     'materiasAprobadas': max_approved // 3 if max_approved else 0
                 }
 
+                # obs='AP' (Aprendizaje por Práctica) y obs='T' no son calificaciones finales
+                # Solo se excluyen materias con letra/número reales o obs que implica estado final (EX, CV, RP)
+                OBS_NO_CALIFICAN = {'AP', 'T'}
+                LETRAS_REALES = {'A', 'B', 'C', 'D', 'F', 'FI', 'EX', 'CV', 'R'}
                 pending_list = [
                     h for h in historial
-                    if not (str(h.get('lyrics', '')).strip() or
-                            str(h.get('number', '')).strip() or
-                            str(h.get('observations', '')).strip())
+                    if not (
+                        str(h.get('lyrics', '')).strip() in LETRAS_REALES or
+                        (str(h.get('number', '')).strip() not in ('', '0')) or
+                        (str(h.get('observations', '')).strip() and
+                         str(h.get('observations', '')).strip() not in OBS_NO_CALIFICAN)
+                    )
                 ]
 
                 api_data['pending_subjects'] = parse_prerequisites(pending_list)

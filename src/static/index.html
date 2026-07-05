@@ -668,7 +668,8 @@
 
             // Calcular estadísticas
             var maxApproved = 0, maxPensum = 0;
-            var approvedGrades = ['A','B','C','D','EX','AP','CV'];
+            // Solo letras de calificación reales = aprobado. 'AP' (Aprendizaje por Práctica) y 'T' NO son aprobación
+            var approvedGrades = ['A','B','C','D','EX','CV'];
             var creditosEvaluados = calculateCreditsEvaluated(allHistory);
 
             for (var i = 0; i < historial.length; i++) {
@@ -738,8 +739,19 @@
                 unphuGet('/unofficial-selected-subjects/?Ano='+anoActual+'&IdPersona='+idPersona+'&IdPeriodo='+numPeriodo+'&IdCarrera='+idCarrera).then(function(d){ return Array.isArray(d)?d:[]; })
             ]);
 
+            // Pendientes = materias sin calificación real (letra ni número).
+            // obs='AP' (Aprendizaje por Práctica) y obs='T' no son calificaciones finales → siguen pendientes/en curso
+            var OBS_NO_CALIFICAN = ['AP', 'T'];
+            var approvedLetters = ['A','B','C','D','F','FI','EX','CV','R'];
             var pendingList = historial.filter(function(h){
-                return !((h.lyrics||'').trim() || (h.number||'').toString().trim() || (h.observations||'').trim());
+                var let_ = (h.lyrics||'').trim();
+                var num  = (h.number||'').toString().trim();
+                var obs  = (h.observations||'').trim();
+                // Tiene calificación real si: letra conocida O número O obs que implica estado final (EX, CV, RP)
+                var tieneCalificacion = approvedLetters.indexOf(let_) !== -1
+                    || (num !== '' && num !== '0')
+                    || (obs !== '' && OBS_NO_CALIFICAN.indexOf(obs) === -1);
+                return !tieneCalificacion;
             });
 
             return {
