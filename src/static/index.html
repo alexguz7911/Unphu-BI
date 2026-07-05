@@ -833,27 +833,30 @@
                 sessionStorage.setItem('userName', name);
                 sessionStorage.setItem('unphuData', JSON.stringify(apiData));
 
-                // Paso 3 (en segundo plano): sincronizar con Data Warehouse
-                fetch('/api/sync', {
+                // Paso 3: sincronizar con Data Warehouse y esperar el ranking antes de redirigir
+                setStepActive('step4');
+                var syncTimeout = new Promise(function(resolve) { setTimeout(resolve, 8000); });
+                var syncFetch = fetch('/api/sync', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ matricula: matricula, nombre: name, id_carrera: apiData.id_carrera, api_data: apiData })
                 }).then(function(r){ return r.json(); }).then(function(syncData){
                     if (syncData.ok && syncData.ranking) {
-                        // Actualizar ranking si el DW respondió
+                        // Guardar ranking antes de redirigir al dashboard
                         try {
                             var stored = JSON.parse(sessionStorage.getItem('unphuData') || '{}');
                             stored.ranking = syncData.ranking;
                             sessionStorage.setItem('unphuData', JSON.stringify(stored));
+                            console.log('[Sync] Ranking obtenido:', syncData.ranking);
                         } catch(e) {}
                     }
                 }).catch(function(e){ console.warn('DW sync failed (non-critical):', e); });
 
-                // Redirigir al dashboard
-                setTimeout(function() {
+                // Esperar el sync o el timeout (lo que ocurra primero), luego redirigir
+                Promise.race([syncFetch, syncTimeout]).finally(function() {
                     setStepDone('step4');
                     setTimeout(function() { window.location.href = 'dashboard.html'; }, 400);
-                }, 600);
+                });
 
             } catch(err) {
                 console.error('Error durante el proceso de login:', err);
