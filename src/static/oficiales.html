@@ -226,7 +226,7 @@
                         credits: parseInt(s.credits) || parseInt(s.creditos) || parseInt(s.Creditos) || 0,
                         prof: s.teacher || s.profesor || s.professor || s.Profesor || '',
                         horario: s.schedule || s.horario || s.Horario || '',
-                        observaciones: s.observations || s.observaciones || s.Observaciones || 'AP',
+                        observaciones: s.observations || s.observaciones || s.Observaciones || '',
                         periodo: s.period || s.periodo || s.Periodo || s.ciclo || s.Ciclo || '',
                         type: 'Presencial'
                     }));
@@ -237,6 +237,20 @@
 
             const tableTbody = document.getElementById('tableMateriasSeleccionadas');
             let totalCredits = 0;
+
+            // Traduce códigos de observación de la API a texto legible
+            function formatObservacion(obs) {
+                const map = {
+                    'AP': '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-blue-50 text-blue-700">En Curso</span>',
+                    'T':  '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-blue-50 text-blue-700">En Curso</span>',
+                    'EX': '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-green-50 text-green-700">Exonerado</span>',
+                    'CV': '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-green-50 text-green-700">Convalidado</span>',
+                    'RP': '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-red-50 text-red-700">Reprobado</span>',
+                };
+                if (!obs) return '<span class="text-slate-400 text-xs">—</span>';
+                return map[obs.trim().toUpperCase()] || `<span class="text-slate-500 text-xs font-mono">${obs}</span>`;
+            }
+
 
             if (selectedSubjects.length === 0) {
                 tableTbody.innerHTML = `
@@ -257,7 +271,7 @@
                             <td class="px-6 py-4 text-slate-600 text-sm">${sub.credits}</td>
                             <td class="px-6 py-4 text-slate-600 text-sm">${sub.prof}</td>
                             <td class="px-6 py-4 text-slate-600 text-sm whitespace-pre-wrap max-w-[250px] leading-relaxed">${sub.horario}</td>
-                            <td class="px-6 py-4 text-slate-600 text-sm">${sub.observaciones}</td>
+                            <td class="px-6 py-4 text-sm">${formatObservacion(sub.observaciones)}</td>
                             <td class="px-6 py-4 text-slate-600 text-sm">${sub.periodo}</td>
                         </tr>
                     `;
