@@ -559,7 +559,9 @@
                 if (code && seenInPeriod[per][code]) continue;
                 if (code) seenInPeriod[per][code] = true;
                 var status = 'Cursando';
-                if (['A','B','C','CV'].indexOf(let_) !== -1 || obs === 'AP' || obs === 'EX' || obs === 'CV') status = 'Aprobado';
+                // obs='AP' significa "Aprendizaje por Práctica" (en curso), NO "Aprobado"
+                // Solo se marca Aprobado si la letra de calificación lo confirma
+                if (['A','B','C','CV','EX'].indexOf(let_) !== -1 || obs === 'EX' || obs === 'CV') status = 'Aprobado';
                 else if (['D','F','FI'].indexOf(let_) !== -1 || obs === 'RP') status = 'Reprobado';
                 else if (let_ === 'R') status = 'Retirado';
                 var cRaw = s.credits;

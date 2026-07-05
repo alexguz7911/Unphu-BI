@@ -74,7 +74,9 @@ def build_history_by_period(historial: List[Dict[str, Any]]) -> Dict[str, List[D
                 seen_subject_codes_in_period[per].add(code)
                 
             status = "Cursando"
-            if let in ['A', 'B', 'C', 'CV'] or obs in ['AP', 'EX', 'CV']:
+            # obs='AP' significa "Aprendizaje por Práctica" (en curso), NO "Aprobado"
+            # Solo obs='EX' (Exonerado) y obs='CV' (Convalidado) implican aprobación
+            if let in ['A', 'B', 'C', 'CV', 'EX'] or obs in ['EX', 'CV']:
                 status = "Aprobado"
             elif let in ['D', 'F', 'FI'] or obs == 'RP':
                 status = "Reprobado"

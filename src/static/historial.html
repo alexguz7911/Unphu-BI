@@ -590,7 +590,8 @@
                 container.insertAdjacentHTML('beforeend', periodHtml);
             });
 
-            document.getElementById('kpiSubjectsPassed').textContent = totalSubjects;
+            // Materias Cursadas = solo las aprobadas (passedSet ya fue calculado arriba)
+            document.getElementById('kpiSubjectsPassed').textContent = countPassed;
             document.getElementById('totalSubjectsLabel').textContent = totalSubjects;
 
 
