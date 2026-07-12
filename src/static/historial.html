@@ -431,8 +431,9 @@
             const inProgressPct = totalPensumSubj > 0 ? Math.round((countInProgress / totalPensumSubj) * 100) : 0;
             const pendingPct = totalPensumSubj > 0 ? Math.round((countPending / totalPensumSubj) * 100) : 0;
 
+            const totalForLabel = countPassed + countPending;
             document.getElementById('semaforoPercent').textContent = `${progressPct}%`;
-            document.getElementById('semaforoSubtext').textContent = `Has completado ${countPassed} de ${totalPensumSubj} materias totales`;
+            document.getElementById('semaforoSubtext').textContent = `Has completado ${countPassed} de ${totalForLabel} materias totales`;
 
             // Dash array offset calculation para stroke-dashoffset = 100
             setTimeout(() => {
@@ -448,9 +449,9 @@
                 document.getElementById('semaforoPendientesBar').style.width = `${pendingPct}%`;
             }, 300);
 
-            document.getElementById('semaforoAprobadas').textContent = `${countPassed}/${totalPensumSubj}`;
-            document.getElementById('semaforoEnCurso').textContent = `${countInProgress}/${totalPensumSubj}`;
-            document.getElementById('semaforoPendientes').textContent = `${countPending}/${totalPensumSubj}`;
+            document.getElementById('semaforoAprobadas').textContent = `${countPassed}/${totalForLabel}`;
+            document.getElementById('semaforoEnCurso').textContent = `${countInProgress}/${totalForLabel}`;
+            document.getElementById('semaforoPendientes').textContent = `${countPending}/${totalForLabel}`;
 
             let totalSubjects = 0;
 
