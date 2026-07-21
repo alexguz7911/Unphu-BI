@@ -531,7 +531,9 @@
                         letterBadge = `<span class="px-2.5 py-1 rounded bg-primary text-white text-xs font-bold">B</span>`;
                     } else if (displayLetter === 'C') {
                         letterBadge = `<span class="px-2.5 py-1 rounded bg-yellow-500 text-white text-xs font-bold">C</span>`;
-                    } else if (displayLetter === 'F' || sub.status === 'Reprobado') {
+                    } else if (displayLetter === 'D') {
+                        letterBadge = `<span class="px-2.5 py-1 rounded bg-orange-500 text-white text-xs font-bold">D</span>`;
+                    } else if (displayLetter === 'F' || displayLetter === 'FI' || sub.status === 'Reprobado') {
                         letterBadge = `<span class="px-2.5 py-1 rounded bg-red-500 text-white text-xs font-bold">${displayLetter}</span>`;
                     } else if (displayLetter === 'R') {
                         letterBadge = `<span class="px-2.5 py-1 rounded bg-slate-300 text-slate-700 text-xs font-bold">R</span>`;
