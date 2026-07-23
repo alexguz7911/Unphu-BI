@@ -125,29 +125,7 @@ class DataWareHouseSync:
                         """, (id_persona_real, id_carrera, id_asig, periodo_hist_id, estatus, grade, aprobada, indice_acumulado))
 
 
-            # --- 6. FACT_INSCRIPCIONES (Materias Seleccionadas Actuales) ---
-            if id_periodo_actual:
-                selected = api_data.get('selected_subjects', [])
-                for asig in selected:
-                    code = asig.get('subjectCode', 'UNK')
-                    name = asig.get('subjectName', 'Desconocida')
-                    raw_cred = asig.get('credits', 0)
-                    try:
-                        cred = int(float(raw_cred)) if raw_cred is not None else 0
-                    except (ValueError, TypeError):
-                        cred = 0
-                    id_asig = hash(code) % 1000000
-                    
-                    cursor.execute("""
-                        INSERT INTO Dim_Asignatura (IdAsignatura, Codigo, Descripcion, Creditos) 
-                        VALUES (%s, %s, %s, %s)
-                        ON CONFLICT (IdAsignatura) DO NOTHING;
-                    """, (id_asig, code, name, cred))
-                    
-                    cursor.execute("""
-                        INSERT INTO Fact_Inscripciones (IdPersona, IdPeriodo, IdAsignatura, Tipo)
-                        VALUES (%s, %s, %s, 'Seleccionada')
-                    """, (id_persona_real, id_periodo_actual, id_asig))
+
 
             # 4. LIMPIEZA / MIGRACIÓN: Asegurar que TODAS las calificaciones históricas del estudiante
             # estén asociadas a su carrera activa actual (Resuelve colisiones de IDs antiguos)

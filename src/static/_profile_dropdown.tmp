@@ -1,0 +1,54 @@
+<!-- Rich Profile Dropdown -->
+<div id="profileDropdown" style="display:none;position:absolute;top:calc(100% + 12px);right:0;background:white;border-radius:16px;box-shadow:0 20px 50px -8px rgba(0,0,0,0.2);border:1px solid rgba(0,0,0,0.06);min-width:280px;z-index:1000;overflow:hidden;animation:dropIn 0.18s cubic-bezier(0.175,0.885,0.32,1.275);">
+    <!-- Profile Header -->
+    <div style="background:linear-gradient(135deg,#001f3f,#003d7a);padding:16px;color:white;">
+        <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#0f9d58,#0a7a44);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;border:2px solid rgba(255,255,255,0.2);" id="pdAvatar">U</div>
+            <div>
+                <div style="font-weight:800;font-size:14px;text-transform:uppercase;letter-spacing:0.03em;" id="pdName">Cargando...</div>
+                <div style="font-size:11px;color:#94a3b8;font-family:monospace;" id="pdMatricula">—</div>
+            </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:12px;">
+            <div style="flex:1;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px;text-align:center;">
+                <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#94a3b8;">GPA</div>
+                <div style="font-size:1.2rem;font-weight:900;color:white;" id="pdGpa">—</div>
+            </div>
+            <div style="flex:1;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px;text-align:center;">
+                <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#94a3b8;">Créditos</div>
+                <div style="font-size:1rem;font-weight:900;color:white;" id="pdCredits">—</div>
+            </div>
+            <div style="flex:1;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:8px;text-align:center;">
+                <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#94a3b8;">Avance</div>
+                <div style="font-size:1rem;font-weight:900;color:white;" id="pdPct">—</div>
+            </div>
+        </div>
+    </div>
+    <!-- Status -->
+    <div style="padding:10px 14px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-size:11px;color:#64748b;" id="pdCareer">—</span>
+        <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;" id="pdStatusBadge">—</span>
+    </div>
+    <!-- Progress Bar -->
+    <div style="padding:10px 14px;border-bottom:1px solid #f1f5f9;">
+        <div style="background:#e2e8f0;border-radius:999px;height:6px;overflow:hidden;">
+            <div style="background:linear-gradient(to right,#0f9d58,#0a7a44);height:6px;border-radius:999px;transition:width 0.6s ease;" id="pdProgressBar" style="width:0%"></div>
+        </div>
+    </div>
+    <!-- Links -->
+    <div style="padding:8px;">
+        <a href="oficiales.html" style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;font-size:13px;font-weight:500;color:#0f172a;text-decoration:none;transition:background 0.12s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='none'">
+            <span style="font-size:18px;">??</span> Ver Perfil Completo
+        </a>
+        <a href="historial.html" style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;font-size:13px;font-weight:500;color:#0f172a;text-decoration:none;transition:background 0.12s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='none'">
+            <span style="font-size:18px;">??</span> Historial Académico
+        </a>
+    </div>
+    <!-- Logout -->
+    <div style="border-top:1px solid #f1f5f9;padding:8px;">
+        <button onclick="event.stopPropagation();cerrarSesion()" style="width:100%;display:flex;align-items:center;gap:10px;padding:9px 10px;background:none;border:none;cursor:pointer;font-size:13px;font-weight:600;color:#dc2626;text-align:left;border-radius:8px;transition:background 0.12s;" onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='none'">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Cerrar sesión
+        </button>
+    </div>
+</div>

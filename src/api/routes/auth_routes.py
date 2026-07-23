@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify # type: ignore
 from google.oauth2 import id_token # type: ignore
 from google.auth.transport import requests as google_requests # type: ignore
-from src.config.settings import GOOGLE_CLIENT_ID, UNPHU_API_TOKEN, UNPHU_API_BASE_URL
+from src.config.settings import GOOGLE_CLIENT_ID, UNPHU_API_TOKEN, UNPHU_API_BASE_URL, UNPHU_ACADEMIC_PERSON_ID
 
 auth_bp = Blueprint('auth_routes', __name__)
 
@@ -23,7 +23,7 @@ def auth_google():
     try:
         # Validar el token con los servidores de Google
         idinfo = id_token.verify_oauth2_token(
-            token, google_requests.Request(), GOOGLE_CLIENT_ID, clock_skew_in_seconds=10
+            token, google_requests.Request(), GOOGLE_CLIENT_ID, clock_skew_in_seconds=60
         )
 
         email = idinfo.get('email')
@@ -36,15 +36,17 @@ def auth_google():
 
         matricula = email.split('@')[0]
 
-        # Devolver credenciales para que el cliente llame a la API de la UNPHU directamente
-        return jsonify({
+        res = {
             "success": True,
             "message": "Autenticación exitosa",
             "matricula": matricula,
             "name": nombre,
             "unphu_token": UNPHU_API_TOKEN,
             "unphu_api_url": UNPHU_API_BASE_URL
-        })
+        }
+        if UNPHU_ACADEMIC_PERSON_ID:
+            res["academic_person_id"] = UNPHU_ACADEMIC_PERSON_ID
+        return jsonify(res)
 
     except ValueError as e:
         import traceback

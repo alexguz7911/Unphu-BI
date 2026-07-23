@@ -606,7 +606,7 @@
 
         // ── Llamadas directas a la API de UNPHU desde el navegador ─
 
-        async function fetchUnphuData(matricula, nombre, unphuToken, unphuApiUrl) {
+        async function fetchUnphuData(matricula, nombre, unphuToken, unphuApiUrl, academicPersonIdOverride) {
             var headers = { 'Authorization': 'Bearer ' + unphuToken };
 
             async function unphuGet(endpoint) {
@@ -635,7 +635,20 @@
                 throw new Error(testMsg);
             }
 
-            var idPersona = studentData.id || parseInt((matricula.replace(/\D/g,''))) || 0;
+            // IMPORTANT: Decode the JWT token to get the academic person ID.
+            // The /student-data/ endpoint returns the auth-service ID (e.g. 126816),
+            // but the academic grading system uses a DIFFERENT person ID stored in the JWT payload (e.g. 133970).
+            // Priority: server-provided override > JWT-decoded id > student-data.id
+            function decodeJWTUserId(token) {
+                try {
+                    var b64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+                    var padding = b64.length % 4 === 0 ? '' : '===='.slice(b64.length % 4);
+                    var payload = JSON.parse(atob(b64 + padding));
+                    return (payload && payload.user && payload.user.id) ? payload.user.id : null;
+                } catch(e) { return null; }
+            }
+            var idPersona = (studentData && studentData.id) ? studentData.id : (academicPersonIdOverride || decodeJWTUserId(unphuToken) || parseInt((matricula.replace(/\D/g,''))) || 0);
+            console.log('[UNPHU] id_persona resolved:', idPersona, '(studentData.id:', studentData.id, '| override:', academicPersonIdOverride, '| JWT:', decodeJWTUserId(unphuToken), ')');
 
             // 2. Carreras y período actual (en paralelo)
             var [careersRaw, currentPeriod] = await Promise.all([
@@ -755,9 +768,12 @@
             });
 
             return {
+                unphu_token: unphuToken,
+                unphu_api_url: unphuApiUrl,
+                id_persona: idPersona,
                 matricula: studentData.username || matricula,
-                carrera: studentData.career || '',
-                nombre: nombre,
+                nombre: (studentData && studentData.names) ? studentData.names : nombre,
+                email: (studentData && studentData.email) ? studentData.email : '',
                 id_carrera: idCarrera,
                 stats: {
                     creditosAprobados: maxApproved,
@@ -835,16 +851,17 @@
                     return;
                 }
 
-                var { matricula, name, unphu_token, unphu_api_url } = authData;
+                var { matricula, name, unphu_token, unphu_api_url, academic_person_id } = authData;
 
                 // Paso 2: llamar a la API de UNPHU directamente desde el navegador usando el token devuelto por el servidor
-                var apiData = await fetchUnphuData(matricula, name, unphu_token, unphu_api_url);
+                // academic_person_id overrides the JWT user.id to use the correct UNPHU academic system person ID
+                var apiData = await fetchUnphuData(matricula, name, unphu_token, unphu_api_url, academic_person_id);
 
                 setStepDone('step3');
                 setStepActive('step4');
 
                 // Guardar datos en sesión
-                sessionStorage.setItem('userName', name);
+                sessionStorage.setItem('userName', apiData.nombre || name);
                 sessionStorage.setItem('unphuData', JSON.stringify(apiData));
 
                 // Paso 3: sincronizar con Data Warehouse y esperar el ranking antes de redirigir

@@ -1,0 +1,785 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>UNPHU BI - Calificaciones del Semestre</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%233D9744%22/><text x=%2250%22 y=%2272%22 font-family=%22Georgia, serif%22 font-size=%2265%22 font-weight=%22bold%22 fill=%22white%22 text-anchor=%22middle%22>U</text></svg>">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+
+    <script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#002b5e",
+                        "accent-green": "#0f9d58",
+                        "accent-blue": "#f1f5f9",
+                        "background-light": "#f8fafc",
+                    },
+                    fontFamily: {
+                        "sans": ["Inter", "sans-serif"]
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background-light);
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+        }
+
+        @media print {
+            nav, .no-print {
+                display: none !important;
+            }
+            body {
+                background-color: white !important;
+            }
+            .print-container {
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                box-shadow: none !important;
+                border: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+    <!-- Top Navigation Bar (Global Style) -->
+    <nav class="bg-[#001f3f] text-white px-4 md:px-8 py-3 flex flex-col md:flex-row justify-between items-center shadow-md relative z-50 gap-4">
+        <div class="flex flex-col md:flex-row items-center gap-3 md:gap-8 w-full md:w-auto text-center md:text-left">
+            <div class="flex items-center justify-center gap-3 font-bold text-xl tracking-wide cursor-pointer"
+                onclick="window.location.href='dashboard.html'">
+                <div class="w-8 h-8 flex items-center justify-center bg-white rounded-md text-[#001f3f] font-bold font-serif"
+                    style="font-family: 'Georgia', serif;">U</div>
+                UNPHU BI
+            </div>
+            <div class="flex flex-wrap justify-center gap-3 md:gap-6 text-xs md:text-sm font-medium w-full md:w-auto mt-2 md:mt-0 order-last md:order-none">
+                <a href="dashboard.html"
+                    class="text-[#a9b5c2] pb-1 border-b-2 border-transparent hover:text-white transition-all">Dashboard</a>
+                <a href="historial.html"
+                    class="text-[#a9b5c2] pb-1 border-b-2 border-transparent hover:text-white transition-all">Historial</a>
+                <a href="calificaciones.html"
+                    class="text-white pb-1 border-b-2 border-white transition-all pointer-events-none">Calificaciones</a>
+                <a href="prematricula.html"
+                    class="text-[#a9b5c2] pb-1 border-b-2 border-transparent hover:text-white transition-all">Prematrícula</a>
+                <a href="oficiales.html"
+                    class="text-[#a9b5c2] pb-1 border-b-2 border-transparent hover:text-white transition-all">Oficiales</a>
+                <a href="guia.html" class="text-[#a9b5c2] pb-1 border-b-2 border-transparent hover:text-white transition-all">Alertas</a>
+            </div>
+        </div>
+        <div class="flex items-center gap-6">
+            <div class="relative flex items-center gap-3 text-right cursor-pointer" id="userProfileArea" onclick="openProfileModal()">
+                <div class="hidden sm:flex flex-col">
+                    <span class="text-sm font-semibold uppercase leading-tight" id="userName">Cargando...</span>
+                    <span class="text-xs text-[#a9b5c2] lowercase leading-tight" id="userIdBox">...</span>
+                </div>
+                <div class="w-9 h-9 flex items-center justify-center rounded-full bg-[#0f9b58] font-bold text-sm border-2 border-white/20 text-white"
+                    id="userAvatar">U</div>
+
+                <!-- Logout Dropdown -->
+                <div id="logoutMenu" style="display:none; position:absolute; top:calc(100% + 12px); right:0; background:white; border-radius:12px; box-shadow:0 8px 30px rgba(0,0,0,0.15); border:1px solid rgba(0,0,0,0.06); min-width:180px; z-index:1000; overflow:hidden; animation:dropIn 0.18s cubic-bezier(0.175,0.885,0.32,1.275);">
+                    <button onclick="event.stopPropagation(); cerrarSesion()" style="width:100%; display:flex; align-items:center; gap:10px; padding:12px 16px; background:none; border:none; cursor:pointer; font-size:13px; font-weight:600; color:#dc2626; text-align:left; transition:background 0.15s;" onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='none'">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                        Cerrar sesión
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <style>@keyframes dropIn { from { opacity:0; transform:translateY(-8px) scale(0.96); } to { opacity:1; transform:translateY(0) scale(1); } }</style>
+    <script>
+        function openProfileModal() {
+            var modal = document.getElementById('studentProfileModal');
+            if (!modal) return;
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+
+            var dStr = sessionStorage.getItem('unphuData');
+            var userName = sessionStorage.getItem('userName') || 'Estudiante';
+            var initials = userName.split(' ').map(function(n){return n[0]}).join('').substring(0,2).toUpperCase() || 'U';
+
+            var av = document.getElementById('pmAvatar'); if(av) av.textContent = initials;
+            var nm = document.getElementById('pmName'); if(nm) nm.textContent = userName;
+
+            if (dStr) {
+                var d = JSON.parse(dStr);
+                var mat = document.getElementById('pmMatricula'); if(mat) mat.textContent = 'Matrícula: ' + (d.matricula || '—');
+                var car = document.getElementById('pmCareer'); if(car) car.textContent = d.carrera || d.career || 'Ingeniería en Sistemas Computacionales';
+                var em = document.getElementById('pmEmail'); if(em) em.textContent = d.email || d.correo || (d.matricula ? d.matricula.toLowerCase() + '@unphu.edu.do' : '—');
+
+                var gpa = parseFloat(d.indices?.cumulativeIndex || d.stats?.cumulativeIndex || 0);
+                var gpaEl = document.getElementById('pmGpa'); if(gpaEl) gpaEl.textContent = gpa > 0 ? gpa.toFixed(2) : '—';
+
+                var badge = document.getElementById('pmStatusBadge');
+                if (badge) {
+                    if (gpa >= 3.5)      { badge.textContent = '★ Excelente'; badge.style.background = 'rgba(16,185,129,0.2)'; badge.style.color = '#34d399'; }
+                    else if (gpa >= 2.5) { badge.textContent = '● En Buen Camino'; badge.style.background = 'rgba(59,130,246,0.2)'; badge.style.color = '#60a5fa'; }
+                    else if (gpa > 0)    { badge.textContent = '⚠ Atención Requerida'; badge.style.background = 'rgba(245,158,11,0.2)'; badge.style.color = '#fbbf24'; }
+                    else                 { badge.textContent = '● Activo'; badge.style.background = 'rgba(255,255,255,0.15)'; badge.style.color = '#fff'; }
+                }
+
+                var cA = parseInt(d.stats?.creditosAprobados || 0);
+                var cT = parseInt(d.stats?.totalCreditos || 216);
+                var credEl = document.getElementById('pmCredits'); if(credEl) credEl.textContent = cA + ' / ' + cT;
+
+                var pct = cT > 0 ? Math.min(100, Math.round((cA / cT) * 100)) : 0;
+                var pctEl = document.getElementById('pmProgressPct'); if(pctEl) pctEl.textContent = pct + '%';
+                var bar = document.getElementById('pmProgressBar'); if(bar) setTimeout(function(){ bar.style.width = pct + '%'; }, 100);
+
+                var passedCount = 0;
+                if (d.career_history) {
+                    var passedSet = new Set();
+                    d.career_history.forEach(function(s){ if (s.qualification >= 70 || ['A','B','C','D'].indexOf((s.calification||'').toUpperCase()) !== -1) passedSet.add(s.codeSubject||s.code||s.Asignatura); });
+                    passedCount = passedSet.size;
+                }
+                var passEl = document.getElementById('pmPassed'); if(passEl) passEl.textContent = passedCount > 0 ? passedCount : (d.stats?.materiasAprobadas || '—');
+
+                var inProgCount = (d.registered_subjects && d.registered_subjects.length > 0) ? d.registered_subjects.length : (d.selected_subjects || []).length;
+                var progEl = document.getElementById('pmInProgress'); if(progEl) progEl.textContent = inProgCount || '—';
+            }
+        }
+
+        function closeProfileModal() {
+            var modal = document.getElementById('studentProfileModal');
+            if (modal) modal.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+
+        function toggleLogoutMenu() {
+            openProfileModal();
+        }
+        function cerrarSesion() {
+            sessionStorage.clear();
+            window.location.href = '/';
+        }
+        document.addEventListener('click', function(e) {
+            var m = document.getElementById('logoutMenu');
+            var p = document.getElementById('userProfileArea');
+            if (m && p && !p.contains(e.target)) m.style.display = 'none';
+        });
+    </script>
+
+    <!-- Main Content -->
+    <main class="max-w-[1240px] mx-auto w-full px-4 lg:px-8 py-8 flex-1 print-container">
+        <!-- Title Header -->
+        <div class="flex items-center gap-3 border-b border-slate-200 pb-3 mb-6">
+            <span class="material-symbols-outlined text-[#002b5e] text-3xl font-extrabold">bar_chart</span>
+            <h1 class="text-2xl font-extrabold text-slate-800 tracking-tight">Calificaciones del semestre</h1>
+        </div>
+
+        <!-- Search Form ("Buscar reporte") -->
+        <div class="bg-white rounded-xl border border-slate-200 shadow-soft p-6 mb-6 no-print">
+            <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4 border-l-4 border-[#002b5e] pl-2">Buscar reporte</h2>
+            <div class="flex flex-col md:flex-row items-end gap-6">
+                <!-- Año Input -->
+                <div class="w-full md:w-1/3">
+                    <label for="searchYear" class="block text-xs font-semibold text-slate-400 uppercase mb-2">Año</label>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">calendar_month</span>
+                        <input id="searchYear" type="number" min="2000" max="2100" class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 outline-none focus:ring-2 focus:ring-[#002b5e]/25 focus:border-[#002b5e]" placeholder="Ej. 2026" />
+                    </div>
+                </div>
+                <!-- Periodo Select -->
+                <div class="w-full md:w-1/3">
+                    <label for="searchPeriod" class="block text-xs font-semibold text-slate-400 uppercase mb-2">Período</label>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">list_alt</span>
+                        <select id="searchPeriod" class="w-full pl-10 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 outline-none focus:ring-2 focus:ring-[#002b5e]/25 focus:border-[#002b5e] appearance-none">
+                            <option value="1">Enero - Abril</option>
+                            <option value="2">Mayo - Agosto</option>
+                            <option value="3">Septiembre - Diciembre</option>
+                        </select>
+                        <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">expand_more</span>
+                    </div>
+                </div>
+                <!-- Buscar Button -->
+                <div class="w-full md:w-1/3">
+                    <button id="btnBuscar" class="w-full bg-[#002b5e] hover:bg-[#001f3f] text-white py-2 px-6 rounded-lg font-bold text-sm tracking-wider flex items-center justify-center gap-2 transition-all shadow-md active:scale-[0.98]">
+                        <span class="material-symbols-outlined text-[18px]">search</span>
+                        BUSCAR
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex justify-end mb-4 no-print">
+            <button id="btnPrint" onclick="window.print()" class="bg-[#3D9744] hover:bg-[#2A6C30] text-white py-2 px-4 rounded-lg font-bold text-xs flex items-center gap-2 shadow-sm transition-all">
+                <span class="material-symbols-outlined text-[16px]">picture_as_pdf</span>
+                IMPRIMIR REPORTE
+            </button>
+        </div>
+
+        <!-- Grades Table Card -->
+        <div class="bg-white rounded-xl border border-slate-200 shadow-soft overflow-hidden mb-6">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm whitespace-nowrap">
+                    <thead class="text-xs font-bold bg-slate-50 text-slate-600 border-b border-slate-200">
+                        <tr>
+                            <th class="px-6 py-4">Grupo</th>
+                            <th class="px-6 py-4">Asignatura</th>
+                            <th class="px-6 py-4 text-center">Cred.</th>
+                            
+                            <!-- Headers with detailed interactive tooltips -->
+                            <th class="px-4 py-4 text-center cursor-help relative group">
+                                <span class="underline decoration-dotted decoration-slate-400">Cal</span>
+                                <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 hidden group-hover:block bg-slate-800 text-white text-[11px] p-2.5 rounded-lg shadow-xl text-center font-normal leading-relaxed whitespace-normal z-50">
+                                    <span class="font-bold text-yellow-400">Calificación Literal:</span><br>Letra obtenida (A, B, C, D, F).<br><span class="font-semibold text-teal-300">EC</span> = En Curso, <span class="font-semibold text-teal-300">CV</span> = Convalidada, <span class="font-semibold text-teal-300">EX</span> = Exonerada.
+                                </div>
+                            </th>
+                            <th class="px-4 py-4 text-center cursor-help relative group">
+                                <span class="underline decoration-dotted decoration-slate-400">ASIS</span>
+                                <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 hidden group-hover:block bg-slate-800 text-white text-[11px] p-2.5 rounded-lg shadow-xl text-center font-normal leading-relaxed whitespace-normal z-50">
+                                    <span class="font-bold text-yellow-400">Asistencia:</span><br>1 = Asistió a examen final.<br>99/FI = Reprobado por Inasistencia.<br>98/F = Reprobado; 2/I = Incompleto.
+                                </div>
+                            </th>
+                            <th class="px-4 py-4 text-center cursor-help relative group">
+                                <span class="underline decoration-dotted decoration-slate-400">ACUM1</span>
+                                <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-44 hidden group-hover:block bg-slate-800 text-white text-[11px] p-2.5 rounded-lg shadow-xl text-center font-normal leading-relaxed whitespace-normal z-50">
+                                    <span class="font-bold text-yellow-400">Acumulado 1:</span><br>Calificación parcial acumulada en el primer periodo.
+                                </div>
+                            </th>
+                            <th class="px-4 py-4 text-center cursor-help relative group">
+                                <span class="underline decoration-dotted decoration-slate-400">ACUM2</span>
+                                <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-44 hidden group-hover:block bg-slate-800 text-white text-[11px] p-2.5 rounded-lg shadow-xl text-center font-normal leading-relaxed whitespace-normal z-50">
+                                    <span class="font-bold text-yellow-400">Acumulado 2:</span><br>Calificación parcial acumulada en el segundo periodo.
+                                </div>
+                            </th>
+                            <th class="px-4 py-4 text-center cursor-help relative group">
+                                <span class="underline decoration-dotted decoration-slate-400">ACUM3</span>
+                                <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-44 hidden group-hover:block bg-slate-800 text-white text-[11px] p-2.5 rounded-lg shadow-xl text-center font-normal leading-relaxed whitespace-normal z-50">
+                                    <span class="font-bold text-yellow-400">Acumulado 3:</span><br>Evaluaciones continuas, tareas y proyectos prácticos.
+                                </div>
+                            </th>
+                            <th class="px-4 py-4 text-center cursor-help relative group">
+                                <span class="underline decoration-dotted decoration-slate-400">Eval_Final</span>
+                                <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-44 hidden group-hover:block bg-slate-800 text-white text-[11px] p-2.5 rounded-lg shadow-xl text-center font-normal leading-relaxed whitespace-normal z-50">
+                                    <span class="font-bold text-yellow-400">Evaluación Final:</span><br>Nota obtenida en el Examen Final del ciclo.
+                                </div>
+                            </th>
+                            <th class="px-4 py-4 text-center cursor-help relative group">
+                                <span class="underline decoration-dotted decoration-slate-400">RU</span>
+                                <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 hidden group-hover:block bg-slate-800 text-white text-[11px] p-2.5 rounded-lg shadow-xl text-center font-normal leading-relaxed whitespace-normal z-50">
+                                    <span class="font-bold text-yellow-400">RU (Rubro Único):</span><br>Promedio Final para asignaturas evaluadas con una sola nota.
+                                </div>
+                            </th>
+                            <th class="px-4 py-4 text-center cursor-help relative group">
+                                <span class="underline decoration-dotted decoration-slate-400">Pf</span>
+                                <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-44 hidden group-hover:block bg-slate-800 text-white text-[11px] p-2.5 rounded-lg shadow-xl text-center font-normal leading-relaxed whitespace-normal z-50">
+                                    <span class="font-bold text-yellow-400">Promedio Final:</span><br>Calificación numérica final de la materia (0 - 100).
+                                </div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBodyGrades" class="divide-y divide-slate-100 font-medium text-slate-700">
+                        <tr>
+                            <td colspan="11" class="px-6 py-10 text-center text-slate-500 font-medium">Cargando calificaciones...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- Indexes summary underneath table -->
+            <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 text-slate-700 text-sm font-semibold space-y-2">
+                <div>
+                    Índice del Semestre (I.S.): <span id="indiceSemestre" class="font-extrabold text-[#002b5e] text-base ml-1">--</span>
+                </div>
+                <div>
+                    Índice Acumulado (I.A.): <span id="indiceAcumulado" class="font-extrabold text-[#002b5e] text-base ml-1">--</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- MOSTRAR LEYENDA Button -->
+        <div class="mb-8 no-print">
+            <button id="btnToggleLegend" class="bg-[#002b5e] hover:bg-[#001f3f] text-white py-2 px-4 rounded-lg font-bold text-xs flex items-center gap-2 transition-all shadow-md active:scale-[0.98]">
+                <span class="material-symbols-outlined text-[16px]">menu</span>
+                MOSTRAR LEYENDA
+            </button>
+        </div>
+
+        <!-- Legend Card (Toggled) -->
+        <div id="legendPanel" class="bg-white rounded-xl border border-slate-200 shadow-soft p-6 mb-8 hidden transition-all duration-300 no-print">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Escala de calificaciones -->
+                <div>
+                    <h3 class="font-bold text-slate-800 text-sm uppercase tracking-wider border-l-4 border-[#002b5e] pl-2 mb-4">Escala de calificaciones</h3>
+                    <div class="grid grid-cols-2 gap-4 text-sm text-slate-600 font-medium">
+                        <div>
+                            <p class="font-bold text-slate-400 mb-2 text-xs uppercase">Calificación numérica</p>
+                            <p class="py-1">90 - 100</p>
+                            <p class="py-1">80 - 89</p>
+                            <p class="py-1">70 - 79</p>
+                            <p class="py-1">60 - 69</p>
+                            <p class="py-1">59 - 0</p>
+                        </div>
+                        <div>
+                            <p class="font-bold text-slate-400 mb-2 text-xs uppercase">Calificación literal</p>
+                            <p class="py-1 font-semibold text-slate-800">A</p>
+                            <p class="py-1 font-semibold text-slate-800">B</p>
+                            <p class="py-1 font-semibold text-slate-800">C</p>
+                            <p class="py-1 font-semibold text-slate-800">D</p>
+                            <p class="py-1 font-semibold text-red-500">F</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rubros -->
+                <div>
+                    <h3 class="font-bold text-slate-800 text-sm uppercase tracking-wider border-l-4 border-[#002b5e] pl-2 mb-4">Rubros</h3>
+                    <div class="text-sm text-slate-600 space-y-2.5">
+                        <p><span class="font-bold text-slate-800 w-24 inline-block">ACUM1:</span> Acumulado 1</p>
+                        <p><span class="font-bold text-slate-800 w-24 inline-block">ACUM2:</span> Acumulado 2</p>
+                        <p><span class="font-bold text-slate-800 w-24 inline-block">ACUM3:</span> Acumulado 3</p>
+                        <p class="leading-relaxed"><span class="font-bold text-slate-800 w-24 inline-block">ASIS:</span> 1: asistió a EF; 99 (FI) reprobado por inasistencia; 98 (F) reprobado; 2 (I) incompleto; 3 (T) incompleto tesis.</p>
+                        <p><span class="font-bold text-slate-800 w-24 inline-block">Eval_Final:</span> Evaluación Final</p>
+                        <p class="leading-relaxed"><span class="font-bold text-slate-800 w-24 inline-block">RU:</span> Promedio Final para Actas de Calificaciones de una sola nota.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Descripcion de simbolos -->
+            <div class="mt-6 pt-6 border-t border-slate-100">
+                <h3 class="font-bold text-slate-800 text-sm uppercase tracking-wider border-l-4 border-[#002b5e] pl-2 mb-4">Descripción de símbolos</h3>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 text-sm text-slate-600">
+                    <p><span class="font-bold text-slate-800">Acum.:</span> Acumulado</p>
+                    <p><span class="font-bold text-slate-800">I.A.:</span> Índice Acumulado</p>
+                    <p><span class="font-bold text-slate-800">I.S.:</span> Índice del Semestre</p>
+                    <p><span class="font-bold text-slate-800">CV:</span> Convalidada</p>
+                    <p><span class="font-bold text-slate-800">NR:</span> Calificación no reportada hasta el momento</p>
+                    <p><span class="font-bold text-slate-800">Créd.:</span> Créditos</p>
+                    <p><span class="font-bold text-slate-800">PF:</span> Período Final</p>
+                    <p><span class="font-bold text-slate-800">EC:</span> En Curso</p>
+                    <p><span class="font-bold text-slate-800">V:</span> Acreditada</p>
+                    <p><span class="font-bold text-slate-800">EX:</span> Exonerada</p>
+                    <p><span class="font-bold text-slate-800">O:</span> Observación</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-6 px-6 no-print">
+        <div class="max-w-[1240px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-4 grayscale opacity-60">
+                <div class="w-8 h-8 bg-slate-800 rounded flex items-center justify-center text-white text-sm font-bold">U</div>
+                <div class="text-left text-[10px] font-bold text-slate-700">
+                    <p>UNIVERSIDAD NACIONAL</p>
+                    <p>PEDRO HENRÍQUEZ UREÑA</p>
+                </div>
+            </div>
+            <div class="text-xs text-slate-400 text-center">
+                <p>Unphu BI © 2026</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Main Logic Engine -->
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const unphuDataStr = sessionStorage.getItem('unphuData');
+            if (!unphuDataStr) {
+                window.location.href = '/';
+                return;
+            }
+
+            const unphuData = JSON.parse(unphuDataStr);
+            const userName = sessionStorage.getItem('userName') || unphuData.nombre || 'Estudiante';
+            const { unphu_token, unphu_api_url, id_carrera, matricula } = unphuData;
+
+            // id_persona fallback: old sessions may not have it stored — extract from student data or matricula
+            let id_persona = unphuData.id_persona;
+            if (!id_persona) {
+                const sdId = (unphuData.student_data || {}).id;
+                if (sdId) {
+                    id_persona = sdId;
+                } else if (matricula) {
+                    id_persona = parseInt(matricula.replace(/\D/g, '')) || null;
+                }
+                if (id_persona) console.warn('[Calificaciones] id_persona recovered from fallback:', id_persona);
+                else console.error('[Calificaciones] id_persona is undefined — please log out and log in again.');
+            }
+
+            // 1. Initialize Profile Header
+            document.getElementById('userName').textContent = userName;
+            document.getElementById('userIdBox').textContent = `ID: ${(matricula || '').toLowerCase()}`;
+            const initials = userName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+            document.getElementById('userAvatar').textContent = initials || 'U';
+
+            // 2. Set Default Form Values (based on current period)
+            let defaultYear = new Date().getFullYear();
+            let defaultPeriodId = 2; // Default for July = Period 2 (Mayo - Agosto)
+
+            const nowMonth = new Date().getMonth() + 1; // 1..4 = P1, 5..8 = P2, 9..12 = P3
+            if (nowMonth >= 1 && nowMonth <= 4) defaultPeriodId = 1;
+            else if (nowMonth >= 5 && nowMonth <= 8) defaultPeriodId = 2;
+            else defaultPeriodId = 3;
+
+            if (unphuData.current_period && unphuData.current_period.length > 0) {
+                const currentP = unphuData.current_period[0];
+                const yVal = parseInt(currentP.Ano || currentP.Año || currentP.year || currentP.Year);
+                if (!isNaN(yVal) && yVal > 2000) defaultYear = yVal;
+
+                const pVal = parseInt(currentP.IdPeriodo || currentP.id || currentP.Id || currentP.numPeriodo);
+                if (!isNaN(pVal) && pVal >= 1 && pVal <= 3) {
+                    defaultPeriodId = pVal;
+                } else if (typeof currentP.Periodo === 'string') {
+                    const pStr = currentP.Periodo.toUpperCase();
+                    if (pStr.includes('MAYO') || pStr.includes('AGO') || pStr.includes('-2')) defaultPeriodId = 2;
+                    else if (pStr.includes('SEP') || pStr.includes('DIC') || pStr.includes('-3')) defaultPeriodId = 3;
+                    else if (pStr.includes('ENE') || pStr.includes('ABR') || pStr.includes('-1')) defaultPeriodId = 1;
+                }
+            }
+
+            document.getElementById('searchYear').value = defaultYear;
+            document.getElementById('searchPeriod').value = defaultPeriodId;
+
+            // Attach search button click handler
+            const btnSearch = document.getElementById('btnBuscar');
+            if (btnSearch) btnSearch.addEventListener('click', performSearch);
+
+            // 3. Helper to make API calls directly
+            async function fetchGrades(year, period) {
+                const headers = { 'Authorization': 'Bearer ' + unphu_token };
+                const url = `${unphu_api_url}/semester-grades/?Ano=${year}&IdPersona=${id_persona}&IdPeriodo=${period}&IdCarrera=${id_carrera}`;
+                
+                try {
+                    const resp = await fetch(url, { headers });
+                    if (!resp.ok) return [];
+                    const json = await resp.json();
+                    return json.data !== undefined ? json.data : (Array.isArray(json) ? json : []);
+                } catch(e) {
+                    console.error('[UNPHU API] Error fetching semester grades:', e);
+                    return [];
+                }
+            }
+
+            // 4. Render grades in the table
+            async function performSearch() {
+                const tableBody = document.getElementById('tableBodyGrades');
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="11" class="px-6 py-10 text-center text-slate-500 font-medium">Buscando calificaciones en la API...</td>
+                    </tr>
+                `;
+                document.getElementById('indiceSemestre').textContent = '--';
+                document.getElementById('indiceAcumulado').textContent = '--';
+
+                const yearVal = parseInt(document.getElementById('searchYear').value);
+                const periodVal = parseInt(document.getElementById('searchPeriod').value);
+
+                if (isNaN(yearVal)) {
+                    alert('Por favor introduce un año válido.');
+                    return;
+                }
+
+                const gradesRaw = await fetchGrades(yearVal, periodVal);
+                const rawArray = Array.isArray(gradesRaw) ? gradesRaw : [];
+                
+                // Filter out grades that belong to past/future periods if specified in item properties
+                const grades = rawArray.filter(g => {
+                    const gYear = parseInt(g.year || g.ano || g.Ano || yearVal);
+                    const gPeriod = parseInt(g.period || g.periodo || g.idPeriodo || g.IdPeriodo || periodVal);
+                    if (!isNaN(gYear) && gYear !== yearVal) return false;
+                    if (!isNaN(gPeriod) && gPeriod !== periodVal) return false;
+                    return true;
+                });
+
+                if (grades.length === 0) {
+                    tableBody.innerHTML = `
+                        <tr>
+                            <td colspan="11" class="px-6 py-10 text-center text-slate-500 font-medium">No se encontraron calificaciones registradas para el período ${yearVal}-${periodVal}.</td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                // Robust helper to find rubric values regardless of casing or spacing variations from UNPHU API
+                function findRubricValue(rubrics, code) {
+                    if (!rubrics) return 'NR';
+                    const cleanTarget = code.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+                    let found = null;
+                    for (let k in rubrics) {
+                        const cleanK = k.toLowerCase().replace(/[^a-z0-9]/g, '');
+                        if (cleanK === cleanTarget) { found = rubrics[k]; break; }
+                        if (cleanTarget === 'acum1' && ['pp1','parcial1','acumulado1','a1'].includes(cleanK)) { found = rubrics[k]; break; }
+                        if (cleanTarget === 'acum2' && ['pp2','parcial2','acumulado2','a2'].includes(cleanK)) { found = rubrics[k]; break; }
+                        if (cleanTarget === 'acum3' && ['tp','ed','ee','acumulado3','a3','parcial3'].includes(cleanK)) { found = rubrics[k]; break; }
+                        if (cleanTarget === 'evalfinal' && ['ef','evaluacionfinal','examenfinal'].includes(cleanK)) { found = rubrics[k]; break; }
+                    }
+
+                    if (!found) return 'NR';
+
+                    const val = (found.assigned !== undefined && found.assigned !== null && found.assigned !== '' && found.assigned !== 'NR')
+                        ? found.assigned
+                        : ((found.points !== undefined && found.points !== null && found.points !== '' && found.points > 0) ? found.points : 'NR');
+
+                    if (val === 'NR' || val === null || val === undefined || val === '') return 'NR';
+
+                    const num = parseFloat(val);
+                    if (!isNaN(num)) {
+                        return num % 1 === 0 ? num.toString() : (Math.round(num * 10) / 10).toString();
+                    }
+                    return val;
+                }
+
+                // Group rubrics by course/codGroup
+                const grouped = {};
+                grades.forEach(g => {
+                    const groupCode = (g.codGroup || g.codeAsignatura || g.codeSubject || g.groupSubjectCode || g.code || g.course || g.subjectName || g.descripcion || 'N/A').trim();
+                    if (!grouped[groupCode]) {
+                        let cName = g.course || g.subjectName || g.descripcion || 'Asignatura';
+                        cName = cName.replace(/INGENIER[AÁ](?=[^Í])/g, 'INGENIERÍA')
+                                     .replace(/INGENIERA\b/g, 'INGENIERÍA')
+                                     .replace(/DISEO/g, 'DISEÑO')
+                                     .replace(/INSTALACIN/g, 'INSTALACIÓN')
+                                     .replace(/FSICA/g, 'FÍSICA')
+                                     .replace(/PROGRAMACIN/g, 'PROGRAMACIÓN')
+                                     .replace(/TEORA/g, 'TEORÍA')
+                                     .replace(/OPTIMIZACIN/g, 'OPTIMIZACIÓN')
+                                     .replace(/LOGCO/g, 'LÓGICO')
+                                     .replace(/MATEMTICA/g, 'MATEMÁTICA')
+                                     .replace(/INGENIERAS/g, 'INGENIERÍAS')
+                                     .replace(/TECNOLOGA/g, 'TECNOLOGÍA')
+                                     .replace(/LÓGCOS/g, 'LÓGICOS');
+
+                        grouped[groupCode] = {
+                            course: cName,
+                            credits: g.credits || 0,
+                            letter: (g.letter || '').trim(),
+                            qualification: g.qualification,
+                            indexPeriod: g.indexPeriod,
+                            cumulativeIndex: g.cumulativeIndex,
+                            rubrics: {}
+                        };
+                    }
+                    const rubKey = (g.codRubro || g.rubro || g.descripcionRubro || g.nameRubro || g.nombreRubro || '').trim();
+                    const finalRubKey = rubKey || ('RUBRO_' + Object.keys(grouped[groupCode].rubrics).length);
+                    grouped[groupCode].rubrics[finalRubKey] = {
+                        assigned: (g.assignedPoints !== undefined && g.assignedPoints !== null && g.assignedPoints !== '') ? g.assignedPoints : g.points,
+                        points: g.points
+                    };
+                });
+
+                // Merge official enrolled subjects for the active period if not present in API grades response
+                const activeEnrolled = (unphuData.registered_subjects && unphuData.registered_subjects.length > 0)
+                    ? unphuData.registered_subjects
+                    : (unphuData.selected_subjects || []);
+
+                if (yearVal === defaultYear && periodVal === defaultPeriodId) {
+                    activeEnrolled.forEach(s => {
+                        const codeKey = (s.groupSubjectCode || s.codeAsignatura || s.codeSubject || s.code || s.Asignatura || 'N/A').trim();
+                        // Check if subject already in grouped by code or course name
+                        const nameKey = (s.subjectName || s.descripcion || s.subject || s.name || '').trim().toLowerCase();
+                        let exists = grouped[codeKey];
+                        if (!exists) {
+                            for (let k in grouped) {
+                                if ((grouped[k].course || '').trim().toLowerCase() === nameKey) { exists = grouped[k]; break; }
+                            }
+                        }
+                        if (!exists) {
+                            let cName = s.subjectName || s.descripcion || s.subject || s.name || 'Asignatura';
+                            grouped[codeKey] = {
+                                course: cName,
+                                credits: parseInt(s.credits || s.creditos || s.Creditos || 0),
+                                letter: 'EC',
+                                qualification: 0,
+                                rubrics: {}
+                            };
+                        }
+                    });
+                }
+
+                // Clear table
+                tableBody.innerHTML = '';
+
+                // Extract indices from first subject in result
+                const storedIndices = unphuData.indices || {};
+                const storedCum = parseFloat(storedIndices.cumulativeIndex) || 0;
+                const storedSem = parseFloat(storedIndices.semesterIndex) || 0;
+
+                let firstKey = Object.keys(grouped)[0];
+                if (firstKey) {
+                    const idxPeriod = parseFloat(grouped[firstKey].indexPeriod) || 0;
+                    const idxCum = parseFloat(grouped[firstKey].cumulativeIndex) || 0;
+                    document.getElementById('indiceSemestre').textContent = idxPeriod > 0 ? idxPeriod.toFixed(2) : (storedSem > 0 ? storedSem.toFixed(2) : '—');
+                    document.getElementById('indiceAcumulado').textContent = idxCum > 0 ? idxCum.toFixed(2) : (storedCum > 0 ? storedCum.toFixed(2) : '0.00');
+                }
+
+                // Render each subject row
+                Object.keys(grouped).forEach(code => {
+                    const info = grouped[code];
+                    const rub = info.rubrics;
+
+                    let calVal = info.letter;
+                    if (!calVal || calVal === 'None' || calVal === 'AP' || calVal === 'T') {
+                        calVal = 'EC';
+                    }
+
+                    let pfVal = info.qualification;
+                    if (calVal === 'EC') pfVal = 0;
+
+                    const asis = findRubricValue(rub, 'ASIS');
+                    const acum1 = findRubricValue(rub, 'ACUM1');
+                    const acum2 = findRubricValue(rub, 'ACUM2');
+                    const acum3 = findRubricValue(rub, 'ACUM3');
+                    const evalFinal = findRubricValue(rub, 'Eval_Final');
+                    const ru = findRubricValue(rub, 'RU');
+
+                    // we use neutral colors: present value = dark blue, NR/empty = gray.
+                    // Only the final Pf column uses the 70-point passing threshold.
+                    const rubricColor = (v) => {
+                        if (v === 'NR' || v === '' || v === '—') return 'text-slate-400';
+                        return 'text-[#002b5e]';
+                    };
+
+                    let calBadgeClass = 'text-slate-700 bg-slate-100';
+                    if (calVal === 'A' || calVal === 'B') calBadgeClass = 'text-green-700 bg-green-50';
+                    else if (calVal === 'C' || calVal === 'D') calBadgeClass = 'text-blue-700 bg-blue-50';
+                    else if (calVal === 'EC') calBadgeClass = 'text-yellow-700 bg-yellow-50 font-bold';
+                    else if (calVal === 'F' || calVal === 'FI') calBadgeClass = 'text-red-700 bg-red-50';
+
+                    tableBody.innerHTML += `
+                        <tr class="hover:bg-slate-50 transition-colors border-b border-slate-100">
+                            <td class="px-6 py-4 font-mono text-xs text-slate-500">${code}</td>
+                            <td class="px-6 py-4 font-semibold text-slate-800">${info.course}</td>
+                            <td class="px-6 py-4 text-center">${info.credits}</td>
+                            <td class="px-4 py-4 text-center">
+                                <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold ${calBadgeClass}">${calVal}</span>
+                            </td>
+                            <td class="px-4 py-4 text-center text-xs font-mono text-slate-500">${asis}</td>
+                            <td class="px-4 py-4 text-center text-xs font-mono ${rubricColor(acum1)}">${acum1}</td>
+                            <td class="px-4 py-4 text-center text-xs font-mono ${rubricColor(acum2)}">${acum2}</td>
+                            <td class="px-4 py-4 text-center text-xs font-mono ${rubricColor(acum3)}">${acum3}</td>
+                            <td class="px-4 py-4 text-center text-xs font-mono ${rubricColor(evalFinal)}">${evalFinal}</td>
+                            <td class="px-4 py-4 text-center text-xs font-mono ${rubricColor(ru)}">${ru || '—'}</td>
+                            <td class="px-4 py-4 text-center font-bold ${pfVal >= 70 ? 'text-[#002b5e]' : pfVal > 0 ? 'text-red-500' : 'text-slate-400'}">${pfVal}</td>
+                        </tr>
+                    `;
+                });
+            }
+
+            // 5. Button and toggle events
+            document.getElementById('btnBuscar').addEventListener('click', performSearch);
+
+            const legendBtn = document.getElementById('btnToggleLegend');
+            const legendPanel = document.getElementById('legendPanel');
+            legendBtn.addEventListener('click', () => {
+                const isHidden = legendPanel.classList.contains('hidden');
+                if (isHidden) {
+                    legendPanel.classList.remove('hidden');
+                    legendBtn.innerHTML = `
+                        <span class="material-symbols-outlined text-[16px]">close</span>
+                        OCULTAR LEYENDA
+                    `;
+                } else {
+                    legendPanel.classList.add('hidden');
+                    legendBtn.innerHTML = `
+                        <span class="material-symbols-outlined text-[16px]">menu</span>
+                        MOSTRAR LEYENDA
+                    `;
+                }
+            });
+
+            // 6. Run Initial Default Search
+            await performSearch();
+        });
+    </script>
+    <!-- ===== STUDENT PROFILE MODAL ===== -->
+    <div id="studentProfileModal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); overflow-y:auto;" onclick="if(event.target===this)closeProfileModal()">
+        <div style="max-width:580px; margin:3rem auto; background:white; border-radius:1.5rem; overflow:hidden; box-shadow:0 25px 60px -10px rgba(0,0,0,0.4); animation:dropIn 0.2s ease;">
+            <!-- Header -->
+            <div style="background:linear-gradient(135deg,#001f3f,#003d7a); padding:2rem; color:white; position:relative;">
+                <button onclick="closeProfileModal()" style="position:absolute; top:1.25rem; right:1.25rem; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:white; border-radius:8px; width:36px; height:36px; cursor:pointer; font-size:18px; display:flex; align-items:center; justify-content:center;">✕</button>
+
+                <div style="display:flex; align-items:center; gap:1.25rem;">
+                    <div style="width:72px; height:72px; border-radius:18px; background:linear-gradient(135deg,#0f9d58,#0a7a44); display:flex; align-items:center; justify-content:center; color:white; font-weight:900; font-size:28px; border:2px solid rgba(255,255,255,0.2); box-shadow:0 8px 20px rgba(0,0,0,0.2);" id="pmAvatar">U</div>
+                    <div style="flex:1;">
+                        <div style="font-size:1.35rem; font-weight:900; text-transform:uppercase; tracking-wide;" id="pmName">Estudiante</div>
+                        <div style="font-size:13px; color:#94a3b8; font-family:monospace; margin-top:2px;" id="pmMatricula">Matrícula: —</div>
+                        <div style="font-size:12px; color:#cbd5e1; margin-top:4px;" id="pmCareer">Ingeniería en Sistemas Computacionales</div>
+                    </div>
+                    <div id="pmStatusBadge" style="font-size:12px; font-weight:700; padding:4px 12px; border-radius:999px; background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.2); color:white;">● Activo</div>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div style="padding:1.25rem 1.75rem; background:#f8fafc; border-bottom:1px solid #e2e8f0; display:grid; grid-template-columns:repeat(4, 1fr); gap:0.75rem; text-align:center;">
+                <div>
+                    <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:#64748b;">GPA Acum.</div>
+                    <div style="font-size:1.6rem; font-weight:900; color:#002b5e; margin-top:2px;" id="pmGpa">—</div>
+                </div>
+                <div>
+                    <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:#64748b;">Créditos</div>
+                    <div style="font-size:1.15rem; font-weight:900; color:#0f172a; margin-top:6px;" id="pmCredits">—</div>
+                </div>
+                <div>
+                    <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:#64748b;">Aprobadas</div>
+                    <div style="font-size:1.15rem; font-weight:900; color:#0f172a; margin-top:6px;" id="pmPassed">—</div>
+                </div>
+                <div>
+                    <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:#64748b;">En Curso</div>
+                    <div style="font-size:1.15rem; font-weight:900; color:#d97706; margin-top:6px;" id="pmInProgress">—</div>
+                </div>
+            </div>
+
+            <!-- Progress Bar Section -->
+            <div style="padding:1.25rem 1.75rem; border-bottom:1px solid #e2e8f0;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <span style="font-size:12px; font-weight:600; color:#475569;">Progreso hacia la Graduación</span>
+                    <span style="font-size:13px; font-weight:800; color:#002b5e;" id="pmProgressPct">0%</span>
+                </div>
+                <div style="background:#e2e8f0; border-radius:999px; height:10px; overflow:hidden;">
+                    <div style="background:linear-gradient(to right,#0f9d58,#0a7a44); height:10px; border-radius:999px; transition:width 0.8s ease;" id="pmProgressBar" style="width:0%"></div>
+                </div>
+            </div>
+
+            <!-- Contact & Details -->
+            <div style="padding:1.25rem 1.75rem; display:flex; flex-direction:column; gap:10px; font-size:13px; color:#475569;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:16px;">📧</span> <span id="pmEmail">—</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:16px;">🎓</span> <span>Universidad Nacional Pedro Henríquez Ureña (UNPHU)</span>
+                </div>
+            </div>
+
+            <!-- Footer Actions -->
+                        <div style="padding:1rem 1.75rem; background:#f8fafc; border-top:1px solid #e2e8f0; display:flex; justify-content:flex-end; align-items:center;">
+                <button onclick="cerrarSesion()" style="background:#fef2f2; border:1px solid #fecaca; color:#dc2626; padding:8px 18px; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:6px;">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    Cerrar sesión
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- ===== END STUDENT PROFILE MODAL ===== -->
+</body>
+
+</html>
+
+
+
+
+
+
+
