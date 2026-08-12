@@ -423,6 +423,25 @@
                 </button>
             </div>
 
+            <!-- Opcion de Login Mock para Presentacion -->
+            <div class="mock-login-section" style="margin-top: 1.5rem; border-top: 1px dashed rgba(61, 151, 68, 0.25); padding-top: 1.25rem;">
+                <a href="javascript:void(0)" onclick="toggleMockSection()" id="mock-toggle-link" style="color: var(--primary-green); text-decoration: none; font-size: 13.5px; font-weight: 600; display: inline-block; transition: all 0.3s ease; padding: 4px 8px; border-radius: 8px;">
+                    ⚡ Ingresar como usuario de prueba (Mock)
+                </a>
+                <div id="mock-selection-area" style="display: none; margin-top: 1rem; flex-direction: column; gap: 0.75rem; text-align: left; animation: fadeIn 0.3s ease;">
+                    <label for="mock-user-select" style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Selecciona un perfil:</label>
+                    <select id="mock-user-select" style="width: 100%; height: 42px; border-radius: 12px; border: 1px solid rgba(61, 151, 68, 0.3); padding: 0 10px; font-family: 'Inter', sans-serif; font-size: 13.5px; color: var(--text-dark); background: white; cursor: pointer; outline: none; transition: border-color 0.2s;">
+                        <option value="ms21-2083">Maria Santos - Ing. de Sistemas (3.80)</option>
+                        <option value="cm22-0941">Carlos Mendoza - Arquitectura (3.42)</option>
+                        <option value="hp19-0112">Hilda Perez - Medicina (3.15)</option>
+                        <option value="mr21-1402">Miguel Rodriguez - Derecho (3.65)</option>
+                    </select>
+                    <button onclick="loginAsMockUser()" style="width: 100%; height: 42px; background-color: var(--primary-green); color: white; border: none; border-radius: 12px; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: background-color 0.2s, transform 0.1s; box-shadow: 0 4px 10px rgba(61, 151, 68, 0.2);">
+                        Acceder como Invitado
+                    </button>
+                </div>
+            </div>
+
             <div class="footer-note">
                 Acceso restringido a usuarios @unphu.edu.do
             </div>
@@ -430,6 +449,33 @@
     </div>
 
     <script>
+        // ── Lógica de Login Mock ──────────────────────────────────
+        function toggleMockSection() {
+            var area = document.getElementById('mock-selection-area');
+            var link = document.getElementById('mock-toggle-link');
+            if (area.style.display === 'none') {
+                area.style.display = 'flex';
+                link.textContent = '✕ Cerrar acceso de prueba';
+                link.style.color = '#EA4335';
+            } else {
+                area.style.display = 'none';
+                link.textContent = '⚡ Ingresar como usuario de prueba (Mock)';
+                link.style.color = 'var(--primary-green)';
+            }
+        }
+
+        async function loginAsMockUser() {
+            var select = document.getElementById('mock-user-select');
+            var selectedMatricula = select.value;
+            if (!selectedMatricula) return;
+            
+            // Mostrar la pantalla de carga
+            document.getElementById('loading-screen').classList.add('visible');
+            
+            // Disparar la respuesta de credencial con el token mock
+            handleCredentialResponse({ credential: 'mock_' + selectedMatricula });
+        }
+
         // ── Helpers para animar los pasos de carga ────────────────
         function setStepDone(id) {
             var el = document.getElementById(id);

@@ -20,10 +20,30 @@ def auth_google():
     if not token:
         return jsonify({"error": "Token no proporcionado"}), 400
 
+    # Interceptar inicio de sesión de usuario mock
+    if isinstance(token, str) and token.startswith('mock_'):
+        matricula = token.replace('mock_', '').strip()
+        from src.config.mock_users import MOCK_USERS
+        student = MOCK_USERS.get(matricula)
+        if student:
+            nombre = student['student_data']['names']
+            return jsonify({
+                "success": True,
+                "message": "Autenticación exitosa (Mock)",
+                "matricula": matricula,
+                "name": nombre,
+                "unphu_token": f"mock_token_{matricula}",
+                "unphu_api_url": f"{request.host_url.rstrip('/')}/api/mock/unphu"
+            })
+        else:
+            return jsonify({"error": f"Usuario mock '{matricula}' no configurado"}), 404
+
     try:
         # Validar el token con los servidores de Google
+        # TEMP: clock_skew aumentado porque el reloj del sistema tiene desfase.
+        # Sincroniza el reloj de Windows y vuelve a poner clock_skew_in_seconds=10
         idinfo = id_token.verify_oauth2_token(
-            token, google_requests.Request(), GOOGLE_CLIENT_ID, clock_skew_in_seconds=10
+            token, google_requests.Request(), GOOGLE_CLIENT_ID, clock_skew_in_seconds=86400
         )
 
         email = idinfo.get('email')

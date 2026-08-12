@@ -16,9 +16,11 @@ def create_app() -> Flask:
     # Registramos las Rutas (Blueprints)
     from src.api.routes.static_routes import static_bp
     from src.api.routes.auth_routes import auth_bp
+    from src.api.routes.mock_unphu_routes import mock_unphu_bp
     
     app.register_blueprint(static_bp)
     app.register_blueprint(auth_bp)
+    app.register_blueprint(mock_unphu_bp)
     
     # Iniciar procesos asíncronos en segundo plano (Desactivado para Vercel)
     # from src.api.services.background_worker import start_worker
