@@ -228,10 +228,12 @@ class StudentSyncService:
 
             enrolled = UnphuApiService.get_officially_enrolled(ano_actual, num_periodo, str(id_persona), id_carrera)
             selected = UnphuApiService.get_unofficial_selected(ano_actual, num_periodo, str(id_persona), id_carrera)
+            current_grades = UnphuApiService.get_semester_grades(ano_actual, num_periodo, str(id_persona), id_carrera)
 
             api_data['current_period'] = [periodo_actual] if periodo_actual else []
             api_data['registered_subjects'] = enrolled
             api_data['selected_subjects'] = selected
+            api_data['current_grades'] = current_grades
 
             # 6. SINCRONIZACIÓN CON DATA WAREHOUSE (DW)
             try:

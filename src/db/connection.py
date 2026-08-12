@@ -15,7 +15,7 @@ class DBConnection:
             try:
                 return psycopg2.connect(env_url)
             except Exception as e:
-                print(f"⚠️ Falló conexión por URL de entorno, reintentando con config local... ({e})")
+                print(f"[WARN] Fallo conexion por URL de entorno, reintentando con config local... ({e})")
 
         # 2. Fallback o Principal: Configuración Local (Settings)
         try:
@@ -27,5 +27,5 @@ class DBConnection:
                 port=POSTGRES_CONFIG['port']
             )
         except Exception as e:
-            print(f"❌ Error final conectando a PostgreSQL (Local Config): {e}")
+            print(f"[ERROR] Error final conectando a PostgreSQL (Local Config): {e}")
             return None
