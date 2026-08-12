@@ -25,8 +25,11 @@ def auth_google():
         matricula = token.replace('mock_', '').strip()
         from src.config.mock_users import MOCK_USERS
         student = MOCK_USERS.get(matricula)
-        if student:
-            nombre = student['student_data']['names']
+        if isinstance(student, dict):
+            student_data = student.get('student_data')
+            nombre = 'Estudiante'
+            if isinstance(student_data, dict):
+                nombre = student_data.get('names', 'Estudiante')
             return jsonify({
                 "success": True,
                 "message": "Autenticación exitosa (Mock)",
@@ -48,6 +51,9 @@ def auth_google():
 
         email = idinfo.get('email')
         nombre = idinfo.get('name')
+
+        if not email:
+            return jsonify({"error": "No se pudo obtener el correo de Google"}), 400
 
         # Filtro de seguridad institucional
         if not email.endswith("@unphu.edu.do"):

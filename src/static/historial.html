@@ -69,14 +69,17 @@
                         class="text-[#a9b5c2] pb-1 border-b-2 border-transparent hover:text-white transition-all">Dashboard</a>
                     <a href="historial.html"
                         class="text-white pb-1 border-b-2 border-white transition-all pointer-events-none">Historial</a>
+                    <a href="calificaciones.html"
+                        class="text-[#a9b5c2] pb-1 border-b-2 border-transparent hover:text-white transition-all">Calificaciones</a>
                     <a href="prematricula.html"
                         class="text-[#a9b5c2] pb-1 border-b-2 border-transparent hover:text-white transition-all">Prematrícula</a>
                     <a href="oficiales.html"
                         class="text-[#a9b5c2] pb-1 border-b-2 border-transparent hover:text-white transition-all">Oficiales</a>
+                    <a href="guia.html" class="text-[#a9b5c2] pb-1 border-b-2 border-transparent hover:text-white transition-all">Alertas</a>
                 </div>
             </div>
             <div class="flex items-center gap-6">
-                <div class="relative flex items-center gap-3 text-right cursor-pointer" id="userProfileArea" onclick="toggleLogoutMenu()">
+                <div class="relative flex items-center gap-3 text-right cursor-pointer" id="userProfileArea" onclick="openProfileModal()">
                     <div class="hidden sm:flex flex-col">
                         <span class="text-sm font-semibold uppercase leading-tight" id="userName">Cargando...</span>
                         <span class="text-xs text-[#a9b5c2] lowercase leading-tight" id="userIdBox">...</span>
@@ -96,9 +99,84 @@
         </nav>
         <style>@keyframes dropIn { from { opacity:0; transform:translateY(-8px) scale(0.96); } to { opacity:1; transform:translateY(0) scale(1); } }</style>
         <script>
-            function toggleLogoutMenu() {
-                var m = document.getElementById('logoutMenu');
-                m.style.display = m.style.display === 'none' ? 'block' : 'none';
+            function openProfileModal() {
+            var modal = document.getElementById('studentProfileModal');
+            if (!modal) return;
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+
+            var dStr = sessionStorage.getItem('unphuData');
+            var userName = sessionStorage.getItem('userName') || 'Estudiante';
+            var initials = userName.split(' ').map(function(n){return n[0]}).join('').substring(0,2).toUpperCase() || 'U';
+
+            var av = document.getElementById('pmAvatar'); if(av) av.textContent = initials;
+            var nm = document.getElementById('pmName'); if(nm) nm.textContent = userName;
+
+            if (dStr) {
+                var d = JSON.parse(dStr);
+                var mat = document.getElementById('pmMatricula'); if(mat) mat.textContent = 'Matrícula: ' + (d.matricula || '—');
+                var car = document.getElementById('pmCareer'); if(car) car.textContent = d.carrera || d.career || 'Ingeniería en Sistemas Computacionales';
+                var em = document.getElementById('pmEmail'); if(em) em.textContent = d.email || d.correo || (d.matricula ? d.matricula.toLowerCase() + '@unphu.edu.do' : '—');
+
+                var gpa = parseFloat(d.indices?.cumulativeIndex || d.stats?.cumulativeIndex || 0);
+                var gpaEl = document.getElementById('pmGpa'); if(gpaEl) gpaEl.textContent = gpa > 0 ? gpa.toFixed(2) : '—';
+
+                var badge = document.getElementById('pmStatusBadge');
+                if (badge) {
+                    if (gpa >= 3.5)      { badge.textContent = '★ Excelente'; badge.style.background = 'rgba(16,185,129,0.2)'; badge.style.color = '#34d399'; }
+                    else if (gpa >= 2.5) { badge.textContent = '● En Buen Camino'; badge.style.background = 'rgba(59,130,246,0.2)'; badge.style.color = '#60a5fa'; }
+                    else if (gpa > 0)    { badge.textContent = '⚠ Atención Requerida'; badge.style.background = 'rgba(245,158,11,0.2)'; badge.style.color = '#fbbf24'; }
+                    else                 { badge.textContent = '● Activo'; badge.style.background = 'rgba(255,255,255,0.15)'; badge.style.color = '#fff'; }
+                }
+
+                var cA = parseInt(d.stats?.creditosAprobados || 0);
+                var cT = parseInt(d.stats?.totalCreditos || 216);
+                var credEl = document.getElementById('pmCredits'); if(credEl) credEl.textContent = cA + ' / ' + cT;
+
+                var pct = cT > 0 ? Math.min(100, Math.round((cA / cT) * 100)) : 0;
+                var pctEl = document.getElementById('pmProgressPct'); if(pctEl) pctEl.textContent = pct + '%';
+                var bar = document.getElementById('pmProgressBar'); if(bar) setTimeout(function(){ bar.style.width = pct + '%'; }, 100);
+
+                var passedCount = 0;
+                if (d.career_history) {
+                    var passedSet = new Set();
+                    d.career_history.forEach(function(s){ if (s.qualification >= 70 || ['A','B','C','D'].indexOf((s.calification||'').toUpperCase()) !== -1) passedSet.add(s.codeSubject||s.code||s.Asignatura); });
+                    passedCount = passedSet.size;
+                }
+                var passEl = document.getElementById('pmPassed'); if(passEl) passEl.textContent = passedCount > 0 ? passedCount : (d.stats?.materiasAprobadas || '—');
+
+                var inProgCount = (d.registered_subjects && d.registered_subjects.length > 0) ? d.registered_subjects.length : (d.selected_subjects || []).length;
+                var progEl = document.getElementById('pmInProgress'); if(progEl) progEl.textContent = inProgCount || '—';
+            }
+        }
+
+        function closeProfileModal() {
+            var modal = document.getElementById('studentProfileModal');
+            if (modal) modal.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+
+        function toggleLogoutMenu() {
+            openProfileModal();
+        }
+            function populateProfileDropdown() {
+                var d = sessionStorage.getItem('unphuData');
+                var name = sessionStorage.getItem('userName') || 'Estudiante';
+                var initials = name.split(' ').map(function(n){return n[0]}).join('').substring(0,2).toUpperCase() || 'U';
+                var pdAv = document.getElementById('pdAvatar'); if(pdAv) pdAv.textContent = initials;
+                var pdNm = document.getElementById('pdName'); if(pdNm) pdNm.textContent = name;
+                if (d) {
+                    var obj = JSON.parse(d);
+                    var mat = document.getElementById('pdMatricula'); if(mat) mat.textContent = 'Mat: ' + (obj.matricula||'�').toLowerCase();
+                    var gpa = parseFloat(obj.indices && obj.indices.cumulativeIndex || obj.stats && obj.stats.cumulativeIndex || 0);
+                    var pdG = document.getElementById('pdGpa'); if(pdG) pdG.textContent = gpa > 0 ? gpa.toFixed(2) : '�';
+                    var cA = parseInt(obj.stats && obj.stats.creditosAprobados || 0);
+                    var cT = parseInt(obj.stats && obj.stats.totalCreditos || 216);
+                    var pdC = document.getElementById('pdCredits'); if(pdC) pdC.textContent = cA + '/' + cT;
+                    var pct = cT > 0 ? Math.min(100, Math.round((cA/cT)*100)) : 0;
+                    var pdP = document.getElementById('pdPct'); if(pdP) pdP.textContent = pct + '%';
+                    var bar = document.getElementById('pdProgressBar'); if(bar) setTimeout(function(){ bar.style.width = pct+'%'; }, 60);
+                }
             }
             function cerrarSesion() {
                 sessionStorage.clear();
@@ -115,17 +193,23 @@
             <!-- Page Header -->
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                 <div>
-                    <h1 class="text-3xl font-bold text-primary dark:text-white tracking-tight">Historial de
-                        Calificaciones</h1>
-                    <p class="text-slate-500 dark:text-slate-400">Consulta tu registro académico detallado por período.
-                    </p>
+                    <h1 class="text-3xl font-bold text-primary dark:text-white tracking-tight">Historial de Calificaciones</h1>
+                    <p class="text-slate-500 dark:text-slate-400">Consulta tu registro académico detallado por período.</p>
                 </div>
-                <!-- Export to PDF Action -->
-                <button id="btnExportPdf"
-                    class="flex items-center justify-center gap-2 bg-primary text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-primary/90 transition-all shadow-sm">
-                    <span class="material-symbols-outlined text-[20px]">picture_as_pdf</span>
-                    Exportar a PDF
-                </button>
+                <div class="flex items-center gap-3 flex-wrap">
+                    <!-- Analysis Button -->
+                    <button id="btnAnalisis" onclick="openAnalysisModal()"
+                        class="flex items-center justify-center gap-2 bg-gradient-to-r from-[#0f9d58] to-[#0a7a44] text-white px-5 py-2.5 rounded-lg font-semibold hover:opacity-90 transition-all shadow-sm">
+                        <span class="material-symbols-outlined text-[20px]">psychology</span>
+                        Análisis Académico
+                    </button>
+                    <!-- Export to PDF Action -->
+                    <button id="btnExportPdf"
+                        class="flex items-center justify-center gap-2 bg-primary text-white px-5 py-2.5 rounded-lg font-semibold hover:bg-primary/90 transition-all shadow-sm">
+                        <span class="material-symbols-outlined text-[20px]">picture_as_pdf</span>
+                        Exportar a PDF
+                    </button>
+                </div>
             </div>
 
             <!-- Summary KPI Cards -->
@@ -397,26 +481,32 @@
             let countInProgress = 0;
             const passedSet = new Set();
             const inProgressSet = new Set();
+            
+            // Use official registered subjects first, or selected subjects as fallback
+            const activeEnrolled = (unphuData.registered_subjects && unphuData.registered_subjects.length > 0)
+                ? unphuData.registered_subjects
+                : (unphuData.selected_subjects || []);
+
+            activeEnrolled.forEach(s => {
+                const code = s.groupSubjectCode || s.codeAsignatura || s.codeSubject || s.code;
+                if (code) inProgressSet.add(code);
+            });
 
             periods.forEach(p => {
                 historyObj[p].forEach(s => {
                     if (s.status === 'Aprobado') {
                         passedSet.add(s.code);
-                    } else if (s.status === 'Cursando') {
-                        inProgressSet.add(s.code);
                     }
                 });
             });
-            countPassed = passedSet.size;
-            countInProgress = inProgressSet.size;
 
-            // Remover las aprobadas si por bug aparecen cursando en algún lado
+            // Remove any passed subjects from inProgressSet
             passedSet.forEach(c => inProgressSet.delete(c));
+            countPassed = passedSet.size;
             countInProgress = inProgressSet.size;
 
             let countPending = 0;
             if (unphuData.pending_subjects) {
-                // Eliminar materias que ya están calculadas como aprobadas y contarlas unicas
                 const pendingSet = new Set();
                 unphuData.pending_subjects.forEach(p => {
                     if (!passedSet.has(p.code) && !inProgressSet.has(p.code)) {
@@ -427,13 +517,30 @@
             }
 
             const totalPensumSubj = countPassed + countInProgress + countPending;
-            const progressPct = totalPensumSubj > 0 ? Math.round((countPassed / totalPensumSubj) * 100) : 0;
+
+            // Calculate system-wide unified progress % based on total credits (e.g. 146 / 223 = 65%)
+            const totalCreds = parseInt(unphuData.stats?.totalCreditos || unphuData.stats?.totalCredits || 223);
+            let passedCreds = 0;
+            if (unphuData.career_history) {
+                const passedCodeSet = new Set();
+                unphuData.career_history.forEach(s => {
+                    const q = parseFloat(s.qualification);
+                    const cal = (s.calification || s.calificacion || '').toUpperCase();
+                    const code = s.codeSubject || s.code || s.Asignatura || '';
+                    if ((q >= 70 || ['A','B','C','D'].includes(cal)) && code && !passedCodeSet.has(code)) {
+                        passedCodeSet.add(code);
+                        passedCreds += parseInt(s.credits || s.creditos || s.creditoAsignatura || 3);
+                    }
+                });
+            }
+            if (passedCreds === 0) passedCreds = parseInt(unphuData.stats?.creditosAprobados || 0);
+
+            const progressPct = totalCreds > 0 ? Math.min(100, Math.round((passedCreds / totalCreds) * 100)) : 0;
             const inProgressPct = totalPensumSubj > 0 ? Math.round((countInProgress / totalPensumSubj) * 100) : 0;
             const pendingPct = totalPensumSubj > 0 ? Math.round((countPending / totalPensumSubj) * 100) : 0;
 
-            const totalForLabel = countPassed + countPending;
             document.getElementById('semaforoPercent').textContent = `${progressPct}%`;
-            document.getElementById('semaforoSubtext').textContent = `Has completado ${countPassed} de ${totalForLabel} materias totales`;
+            document.getElementById('semaforoSubtext').textContent = `Has completado ${passedCreds} de ${totalCreds} créditos (${countPassed} de ${totalPensumSubj} materias)`;
 
             // Dash array offset calculation para stroke-dashoffset = 100
             setTimeout(() => {
@@ -449,9 +556,9 @@
                 document.getElementById('semaforoPendientesBar').style.width = `${pendingPct}%`;
             }, 300);
 
-            document.getElementById('semaforoAprobadas').textContent = `${countPassed}/${totalForLabel}`;
-            document.getElementById('semaforoEnCurso').textContent = `${countInProgress}/${totalForLabel}`;
-            document.getElementById('semaforoPendientes').textContent = `${countPending}/${totalForLabel}`;
+            document.getElementById('semaforoAprobadas').textContent = `${countPassed}/${totalPensumSubj}`;
+            document.getElementById('semaforoEnCurso').textContent = `${countInProgress}/${totalPensumSubj}`;
+            document.getElementById('semaforoPendientes').textContent = `${countPending}/${totalPensumSubj}`;
 
             let totalSubjects = 0;
 
@@ -531,9 +638,7 @@
                         letterBadge = `<span class="px-2.5 py-1 rounded bg-primary text-white text-xs font-bold">B</span>`;
                     } else if (displayLetter === 'C') {
                         letterBadge = `<span class="px-2.5 py-1 rounded bg-yellow-500 text-white text-xs font-bold">C</span>`;
-                    } else if (displayLetter === 'D') {
-                        letterBadge = `<span class="px-2.5 py-1 rounded bg-orange-500 text-white text-xs font-bold">D</span>`;
-                    } else if (displayLetter === 'F' || displayLetter === 'FI' || sub.status === 'Reprobado') {
+                    } else if (displayLetter === 'F' || sub.status === 'Reprobado') {
                         letterBadge = `<span class="px-2.5 py-1 rounded bg-red-500 text-white text-xs font-bold">${displayLetter}</span>`;
                     } else if (displayLetter === 'R') {
                         letterBadge = `<span class="px-2.5 py-1 rounded bg-slate-300 text-slate-700 text-xs font-bold">R</span>`;
@@ -787,6 +892,457 @@
             }
         });
     </script>
+
+    <!-- ===== ACADEMIC ANALYSIS MODAL ===== -->
+    <div id="analysisModal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); overflow-y:auto;" onclick="if(event.target===this)closeAnalysisModal()">
+        <div style="max-width:780px; margin:2rem auto; background:white; border-radius:1.5rem; overflow:hidden; box-shadow:0 25px 60px -10px rgba(0,0,0,0.4);" id="analysisContent">
+
+            <!-- Modal Header -->
+            <div style="background:linear-gradient(135deg,#001f3f,#003d7a); padding:1.5rem 2rem; color:white;">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                    <div>
+                        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#94a3b8;margin-bottom:4px;">UNPHU BI — Inteligencia Académica</div>
+                        <h2 style="font-size:1.5rem;font-weight:900;margin:0 0 4px;">Informe de Estado Académico</h2>
+                        <div style="font-size:13px;color:#94a3b8;" id="reportMeta">Generado el — · —</div>
+                    </div>
+                    <button onclick="closeAnalysisModal()" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:white;border-radius:8px;width:36px;height:36px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;">✕</button>
+                </div>
+                <!-- Student Summary Row -->
+                <div style="display:flex;flex-wrap:wrap;gap:1rem;margin-top:1.25rem;" id="reportSummaryRow">
+                    <div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:12px 20px;text-align:center;min-width:110px;">
+                        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;">GPA Acumulado</div>
+                        <div style="font-size:2rem;font-weight:900;color:white;" id="rGpa">—</div>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:12px 20px;text-align:center;min-width:110px;">
+                        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;">Créditos Aprobados</div>
+                        <div style="font-size:2rem;font-weight:900;color:white;" id="rCredits">—</div>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:12px 20px;text-align:center;min-width:110px;">
+                        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;">Materias Aprobadas</div>
+                        <div style="font-size:2rem;font-weight:900;color:white;" id="rPassed">—</div>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:12px 20px;text-align:center;min-width:110px;">
+                        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;">Materias en Curso</div>
+                        <div style="font-size:2rem;font-weight:900;color:#fbbf24;" id="rInProgress">—</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loader -->
+            <div id="analysisLoader" style="display:none;flex-direction:column;align-items:center;justify-content:center;padding:2.5rem 2rem;gap:16px;">
+                <div style="width:44px;height:44px;border:4px solid rgba(255,255,255,0.2);border-top-color:white;border-radius:50%;animation:spinLoader 0.8s linear infinite;"></div>
+                <span style="font-size:13px;color:#94a3b8;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;">Generando informe...</span>
+            </div>
+            <style>@keyframes spinLoader{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}</style>
+            <!-- Modal Body -->
+            <div style="padding:1.75rem 2rem;display:flex;flex-direction:column;gap:1.5rem;" id="modalBody">
+
+                <!-- Progress Section -->
+                <div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
+                    <div style="background:#f8fafc;padding:14px 18px;border-bottom:1px solid #e2e8f0;">
+                        <h3 style="font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#475569;margin:0;">Progreso hacia la Graduación</h3>
+                    </div>
+                    <div style="padding:18px;">
+                        <div style="display:flex;justify-content:space-between;font-size:13px;color:#64748b;margin-bottom:8px;">
+                            <span id="rProgressLabel">0 de 216 créditos completados</span>
+                            <span style="font-weight:700;color:#002b5e;" id="rProgressPct">0%</span>
+                        </div>
+                        <div style="background:#e2e8f0;border-radius:999px;height:10px;overflow:hidden;">
+                            <div id="rProgressBar" style="background:linear-gradient(to right,#0f9d58,#0a7a44);height:10px;border-radius:999px;width:0%;transition:width 0.8s ease;"></div>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;margin-top:12px;gap:1rem;flex-wrap:wrap;" id="rProjectionRow">
+                            <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 16px;text-align:center;flex:1;">
+                                <div style="font-size:10px;color:#3b82f6;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;">Créditos Restantes</div>
+                                <div style="font-size:1.5rem;font-weight:900;color:#1d4ed8;" id="rCredRemaining">—</div>
+                            </div>
+                            <div style="background:#fef9c3;border:1px solid #fde68a;border-radius:8px;padding:10px 16px;text-align:center;flex:1;">
+                                <div style="font-size:10px;color:#b45309;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;">Cuatrimestres Estimados</div>
+                                <div style="font-size:1.5rem;font-weight:900;color:#92400e;" id="rSemesters">—</div>
+                            </div>
+                            <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 16px;text-align:center;flex:1;">
+                                <div style="font-size:10px;color:#16a34a;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;">Materias Restantes</div>
+                                <div style="font-size:1.5rem;font-weight:900;color:#166534;" id="rSubjectsLeft">—</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Current Subjects -->
+                <div id="rCurrentSection" style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
+                    <div style="background:#f8fafc;padding:14px 18px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;">
+                        <h3 style="font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#475569;margin:0;">Materias Actuales — Este Cuatrimestre</h3>
+                        <span style="background:#fef3c7;color:#b45309;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;" id="rCurrentPeriod">—</span>
+                    </div>
+                    <div id="rCurrentList" style="padding:0;"></div>
+                </div>
+
+                <!-- Priority Pending Subjects -->
+                <div id="rPrioritySection" style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
+                    <div style="background:#f8fafc;padding:14px 18px;border-bottom:1px solid #e2e8f0;">
+                        <h3 style="font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#475569;margin:0;">Materias Pendientes a Priorizar <span style="font-weight:400;font-style:italic;text-transform:none;">(ordenadas por créditos)</span></h3>
+                    </div>
+                    <div id="rPriorityList" style="padding:0;"></div>
+                </div>
+
+                <!-- Recommendations -->
+                <div style="border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
+                    <div style="background:#f8fafc;padding:14px 18px;border-bottom:1px solid #e2e8f0;">
+                        <h3 style="font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#475569;margin:0;">Recomendaciones Personalizadas</h3>
+                    </div>
+                    <div id="rRecommendations" style="padding:16px 18px;display:flex;flex-direction:column;gap:10px;"></div>
+                </div>
+
+                <!-- Disclaimer -->
+                <p style="font-size:11px;color:#94a3b8;text-align:center;line-height:1.5;">Este análisis es generado automáticamente con base en los datos disponibles en el sistema.<br>Para orientación oficial, consulta con tu Coordinador Académico.</p>
+
+                <!-- Actions -->
+                <div style="display:flex;justify-content:flex-end;gap:12px;flex-wrap:wrap;">
+                    <button onclick="closeAnalysisModal()" style="padding:10px 20px;border:1px solid #e2e8f0;border-radius:8px;background:white;font-size:13px;font-weight:600;cursor:pointer;color:#475569;">Cerrar</button>
+                    <button onclick="exportAnalysisPdf()" style="padding:10px 20px;border:none;border-radius:8px;background:linear-gradient(to right,#002b5e,#004080);font-size:13px;font-weight:700;cursor:pointer;color:white;display:flex;align-items:center;gap:8px;">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                        Exportar Informe (PDF)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- ===== END MODAL ===== -->
+
+    <style>
+        @media print {
+            body > *:not(#analysisPrintArea) { display: none !important; }
+            #analysisPrintArea { display: block !important; }
+        }
+    </style>
+    <div id="analysisPrintArea" style="display:none;"></div>
+
+    <script>
+    // ===== ACADEMIC ANALYSIS ENGINE =====
+
+    function openAnalysisModal() {
+        var modal = document.getElementById('analysisModal');
+        var data = sessionStorage.getItem('unphuData');
+        if (!data) { alert('No hay datos disponibles.'); return; }
+        modal.style.display = 'block';
+        document.body.style.overflow = 'hidden';
+        var body = document.getElementById('modalBody');
+        var sumRow = document.getElementById('reportSummaryRow');
+        var loader = document.getElementById('analysisLoader');
+        if (body) body.style.display = 'none';
+        if (sumRow) sumRow.style.display = 'none';
+        if (loader) loader.style.display = 'flex';
+        setTimeout(function() {
+            var d = JSON.parse(sessionStorage.getItem('unphuData'));
+            generateReport(d);
+            if (loader) loader.style.display = 'none';
+            if (sumRow) { sumRow.style.display = 'flex'; sumRow.style.flexWrap = 'wrap'; }
+            if (body) body.style.display = 'flex';
+            var pct = parseInt(document.getElementById('rProgressPct').textContent) || 0;
+            setTimeout(function() { document.getElementById('rProgressBar').style.width = pct + '%'; }, 80);
+        }, 1800);
+    }
+
+    function closeAnalysisModal() {
+        document.getElementById('analysisModal').style.display = 'none';
+        document.body.style.overflow = '';
+    }
+
+    function generateReport(d) {
+        const userName = sessionStorage.getItem('userName') || 'Estudiante';
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('es-DO', { year:'numeric', month:'long', day:'numeric' });
+        const timeStr = now.toLocaleTimeString('es-DO', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+        document.getElementById('reportMeta').textContent = `Generado el ${dateStr} ${timeStr} \u00b7 ${userName.toUpperCase()}`;
+
+        // ── GPA ──
+        const gpa = parseFloat(d.indices?.cumulativeIndex || d.stats?.cumulativeIndex || 0);
+        document.getElementById('rGpa').textContent = gpa > 0 ? gpa.toFixed(2) : '—';
+
+        // ── Credits ──
+        const credAprobados = parseInt(d.stats?.creditosAprobados || 0);
+        const credTotal = parseInt(d.stats?.totalCreditos || 216);
+        const credRemaining = Math.max(0, credTotal - credAprobados);
+        document.getElementById('rCredits').textContent = `${credAprobados}/${credTotal}`;
+        document.getElementById('rCredRemaining').textContent = credRemaining;
+
+        const pct = credTotal > 0 ? Math.min(100, Math.round((credAprobados / credTotal) * 100)) : 0;
+        document.getElementById('rProgressLabel').textContent = `${credAprobados} de ${credTotal} créditos completados`;
+        document.getElementById('rProgressPct').textContent = pct + '%';
+
+        // ── Passed Subjects ──
+        const passedSet = new Set();
+        if (d.career_history) {
+            d.career_history.forEach(s => {
+                const q = parseFloat(s.qualification);
+                const cal = (s.calification || s.calificacion || '').toUpperCase();
+                if (q >= 70 || ['A','B','C','D'].includes(cal)) {
+                    passedSet.add(s.codeSubject || s.code || s.Asignatura || '');
+                }
+            });
+        }
+        const passedCount = passedSet.size;
+        document.getElementById('rPassed').textContent = passedCount || (d.stats?.materiasAprobadas || '—');
+
+        // ── In-Progress ──
+        const currentSubs = d.registered_subjects || d.selected_subjects || [];
+        document.getElementById('rInProgress').textContent = currentSubs.length || '—';
+
+        // ── Semester Projection ──
+        const avgCreditsPerQuarter = 15;
+        const currentSubsCredits = currentSubs.reduce((sum, s) => sum + parseInt(s.credits || s.creditos || 0), 0);
+        let semestersLeft;
+        if (credRemaining <= 0) {
+            semestersLeft = 0;
+        } else if (currentSubsCredits >= credRemaining) {
+            semestersLeft = 1;
+        } else {
+            semestersLeft = Math.ceil((credRemaining - currentSubsCredits) / avgCreditsPerQuarter) + 1;
+        }
+        document.getElementById('rSemesters').textContent = semestersLeft <= 0 ? '0 (Completado)' : semestersLeft === 1 ? '1 (Cuatrimestre en curso)' : `${semestersLeft} cuatrimestres`;
+
+        // ── Subjects remaining ──
+        const pendingSubs = (d.pending_subjects || []).filter(p => {
+            const code = p.code || p.codeSubject || p.codeAsignatura || '';
+            return code && !passedSet.has(code);
+        });
+        const currentCodes = new Set(currentSubs.map(s => s.groupSubjectCode || s.codeAsignatura || s.code || ''));
+        const trulyPending = pendingSubs.filter(p => !currentCodes.has(p.code || p.codeSubject || ''));
+        document.getElementById('rSubjectsLeft').textContent = (trulyPending.length + currentSubs.length) || '—';
+
+        // ── Period ──
+        let periodStr = 'Mayo - Agosto 2026';
+        if (d.current_period && d.current_period.length > 0) {
+            const cp = d.current_period[0];
+            if (cp.Periodo) periodStr = cp.Periodo;
+            else if (cp.periodo) periodStr = cp.periodo;
+            else if (cp.Ano && cp.IdPeriodo) {
+                const pMap = { 1: 'Enero - Abril', 2: 'Mayo - Agosto', 3: 'Septiembre - Diciembre' };
+                periodStr = `${pMap[cp.IdPeriodo] || 'Cuatrimestre ' + cp.IdPeriodo} ${cp.Ano}`;
+            }
+        }
+        document.getElementById('rCurrentPeriod').textContent = `${currentSubs.length} Materias · ${periodStr}`;
+
+        // ── Current Subjects Table ──
+        const currentListEl = document.getElementById('rCurrentList');
+        if (currentSubs.length === 0) {
+            currentListEl.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8;font-size:13px;">No hay materias en curso registradas.</div>';
+        } else {
+            const sorted = [...currentSubs].sort((a,b) => (parseInt(b.credits||b.creditos||0)) - (parseInt(a.credits||a.creditos||0)));
+            let html = '';
+            sorted.forEach((s,i) => {
+                const code = s.groupSubjectCode || s.codeAsignatura || s.code || '—';
+                const name = s.subjectName || s.descripcion || s.name || '—';
+                const cred = parseInt(s.credits || s.creditos || 0);
+                const prof = s.teacher || s.profesor || '';
+                const bg = i % 2 === 0 ? '#fff' : '#f8fafc';
+                html += `<div style="background:${bg};padding:12px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid #e2e8f0;">
+                    <div style="flex:1;">
+                        <span style="font-size:11px;font-family:monospace;color:#64748b;">${code}</span>
+                        <div style="font-size:13px;font-weight:600;color:#0f172a;">${name}</div>
+                        ${prof ? `<div style="font-size:11px;color:#94a3b8;">${prof}</div>` : ''}
+                    </div>
+                    <div style="background:${cred>=4?'#dbeafe':cred>=3?'#e0e7ff':'#f1f5f9'};color:${cred>=4?'#1d4ed8':cred>=3?'#4338ca':'#475569'};font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;white-space:nowrap;">
+                        ${cred} créd.
+                    </div>
+                </div>`;
+            });
+            currentListEl.innerHTML = html;
+        }
+
+        // ── Priority Pending Subjects ──
+        const priorityEl = document.getElementById('rPriorityList');
+        if (trulyPending.length === 0) {
+            priorityEl.innerHTML = '<div style="padding:20px;text-align:center;color:#16a34a;font-size:13px;font-weight:600;">✓ No hay materias pendientes identificadas. ¡Bien encaminado!</div>';
+        } else {
+            const CAPSTONE_KEYWORDS = ['TRABAJO DE GRADO', 'TESIS', 'PASANTIA', 'PASANTÍA', 'PROYECTO DE GRADO', 'SEMINARIO DE GRADO'];
+            const isNearGrad = credRemaining <= 30;
+
+            const filteredPending = trulyPending.filter(p => {
+                const nameUpper = (p.subjectName || p.descripcion || p.name || p.asignatura || '').toUpperCase();
+                if (!isNearGrad && CAPSTONE_KEYWORDS.some(k => nameUpper.includes(k))) return false;
+                return true;
+            });
+
+            const top = [...filteredPending].sort((a,b) => {
+                const uA = parseInt(a.unlocks || 0);
+                const uB = parseInt(b.unlocks || 0);
+                if (uB !== uA) return uB - uA;
+                const cA = parseInt(a.credits || a.creditos || a.creditoAsignatura || 0);
+                const cB = parseInt(b.credits || b.creditos || b.creditoAsignatura || 0);
+                return cB - cA;
+            }).slice(0,6);
+
+            let html = '';
+            top.forEach((s,i) => {
+                const code = s.code || s.codeSubject || s.codeAsignatura || '—';
+                const name = s.subjectName || s.descripcion || s.name || s.asignatura || '—';
+                const cred = parseInt(s.credits || s.creditos || s.creditoAsignatura || 0);
+                const unlocks = parseInt(s.unlocks || 0);
+                const bg = i % 2 === 0 ? '#fff' : '#f8fafc';
+                const priority = unlocks > 0 ? `🔴 Prerrequisito Clave (Abre ${unlocks} materias)` : (i === 0 ? '🟡 Recomendada' : '🟢 Normal');
+                html += `<div style="background:${bg};padding:12px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid #e2e8f0;">
+                    <div style="flex:1;">
+                        <span style="font-size:11px;font-family:monospace;color:#64748b;">${code}</span>
+                        <div style="font-size:13px;font-weight:600;color:#0f172a;">${name}</div>
+                        <div style="font-size:11px;color:${unlocks>0?'#dc2626':'#94a3b8'};font-weight:${unlocks>0?'600':'400'};margin-top:1px;">${priority}</div>
+                    </div>
+                    <div style="background:${cred>=4?'#fee2e2':cred>=3?'#fef3c7':'#f1f5f9'};color:${cred>=4?'#b91c1c':cred>=3?'#92400e':'#475569'};font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;white-space:nowrap;">
+                        ${cred} créd.
+                    </div>
+                </div>`;
+            });
+            if (filteredPending.length > 6) html += `<div style="padding:10px 18px;text-align:center;font-size:12px;color:#94a3b8;">... y ${trulyPending.length - 6} materias pendientes adicionales.</div>`;
+            priorityEl.innerHTML = html;
+        }
+
+        // ── Recommendations ──
+        const recs = [];
+
+        if (gpa >= 3.5) {
+            recs.push({ icon: '⭐', color: '#0f9d58', bg: '#f0fdf4', border: '#bbf7d0', text: `Tu GPA de <strong>${gpa.toFixed(2)}</strong> es excelente. Mantén este ritmo y considera postularte a reconocimientos académicos como Cuadro de Honor.` });
+        } else if (gpa >= 3.0) {
+            recs.push({ icon: '📈', color: '#1d4ed8', bg: '#eff6ff', border: '#bfdbfe', text: `Tu GPA de <strong>${gpa.toFixed(2)}</strong> es bueno. Con esfuerzo adicional podrías alcanzar distinción académica (GPA ≥ 3.5).` });
+        } else if (gpa >= 2.5) {
+            recs.push({ icon: '⚠️', color: '#b45309', bg: '#fef9c3', border: '#fde68a', text: `Tu GPA de <strong>${gpa.toFixed(2)}</strong> es regular. Identifica las materias con mayor peso en créditos y enfoca tu esfuerzo en mejorar tus notas en ellas.` });
+        } else if (gpa > 0) {
+            recs.push({ icon: '🚨', color: '#b91c1c', bg: '#fef2f2', border: '#fecaca', text: `Tu GPA de <strong>${gpa.toFixed(2)}</strong> necesita atención urgente. Habla con tu Coordinador Académico para un plan de mejora. Evita retirar materias sin asesoría.` });
+        }
+
+        if (semestersLeft <= 0) {
+            recs.push({ icon: '🎓', color: '#6d28d9', bg: '#f5f3ff', border: '#ddd6fe', text: `¡Felicitaciones! Has completado todos los créditos requeridos. Confirma con Registro los trámites finales de graduación.` });
+        } else if (semestersLeft === 1) {
+            recs.push({ icon: '🎓', color: '#6d28d9', bg: '#f5f3ff', border: '#ddd6fe', text: `¡Estás en tu último cuatrimestre! Las materias que cursa actualmente cubren los créditos restantes. Confirma con Registro que todos tus créditos han sido procesados y cumples con los requisitos de servicio social y pasantía.` });
+        } else {
+            recs.push({ icon: '📅', color: '#0369a1', bg: '#f0f9ff', border: '#bae6fd', text: `Con tu ritmo actual necesitarás aproximadamente <strong>${semestersLeft} cuatrimestre(s)</strong> adicionales para graduarte. Planifica tu carga crediticia con tu coordinador.` });
+        }
+
+        if (currentSubs.length > 0) {
+            const sorted = [...currentSubs].sort((a,b) => (parseInt(b.credits||b.creditos||0))-(parseInt(a.credits||a.creditos||0)));
+            const top1 = sorted[0];
+            const topName = top1 ? (top1.subjectName || top1.descripcion || top1.name || '') : '';
+            const topCred = top1 ? parseInt(top1.credits || top1.creditos || 0) : 0;
+            if (topName && topCred >= 3) {
+                recs.push({ icon: '🎯', color: '#0f9d58', bg: '#f0fdf4', border: '#bbf7d0', text: `Prioriza <strong>${topName}</strong> (${topCred} créditos) — es la materia con mayor impacto en tu índice este cuatrimestre.` });
+            }
+        }
+
+        if (recs.length === 0) {
+            recs.push({ icon: '✅', color: '#0f9d58', bg: '#f0fdf4', border: '#bbf7d0', text: 'No se detectaron alertas académicas. Continúa con tu plan de estudios actual.' });
+        }
+
+        const recsEl = document.getElementById('rRecommendations');
+        recsEl.innerHTML = recs.map(r => `
+            <div style="background:${r.bg};border:1px solid ${r.border};border-radius:10px;padding:12px 16px;display:flex;gap:12px;align-items:flex-start;">
+                <span style="font-size:20px;line-height:1;">${r.icon}</span>
+                <p style="font-size:13px;color:#334155;line-height:1.6;margin:0;">${r.text}</p>
+            </div>
+        `).join('');
+    }
+
+    function exportAnalysisPdf() {
+        const modalContent = document.getElementById('analysisContent').cloneNode(true);
+
+        // Remove buttons from clone
+        modalContent.querySelectorAll('button').forEach(b => b.remove());
+
+        // Add print-specific header
+        const printArea = document.getElementById('analysisPrintArea');
+        printArea.innerHTML = '';
+        printArea.appendChild(modalContent);
+        printArea.style.display = 'block';
+
+        // Hide modal temporarily
+        document.getElementById('analysisModal').style.display = 'none';
+        document.body.style.overflow = '';
+
+        window.print();
+
+        // Restore after print
+        setTimeout(() => {
+            printArea.style.display = 'none';
+            printArea.innerHTML = '';
+            document.getElementById('analysisModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }, 1500);
+    }
+    </script>
+    <!-- ===== STUDENT PROFILE MODAL ===== -->
+    <div id="studentProfileModal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); overflow-y:auto;" onclick="if(event.target===this)closeProfileModal()">
+        <div style="max-width:580px; margin:3rem auto; background:white; border-radius:1.5rem; overflow:hidden; box-shadow:0 25px 60px -10px rgba(0,0,0,0.4); animation:dropIn 0.2s ease;">
+            <!-- Header -->
+            <div style="background:linear-gradient(135deg,#001f3f,#003d7a); padding:2rem; color:white; position:relative;">
+                <button onclick="closeProfileModal()" style="position:absolute; top:1.25rem; right:1.25rem; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:white; border-radius:8px; width:36px; height:36px; cursor:pointer; font-size:18px; display:flex; align-items:center; justify-content:center;">✕</button>
+
+                <div style="display:flex; align-items:center; gap:1.25rem;">
+                    <div style="width:72px; height:72px; border-radius:18px; background:linear-gradient(135deg,#0f9d58,#0a7a44); display:flex; align-items:center; justify-content:center; color:white; font-weight:900; font-size:28px; border:2px solid rgba(255,255,255,0.2); box-shadow:0 8px 20px rgba(0,0,0,0.2);" id="pmAvatar">U</div>
+                    <div style="flex:1;">
+                        <div style="font-size:1.35rem; font-weight:900; text-transform:uppercase; tracking-wide;" id="pmName">Estudiante</div>
+                        <div style="font-size:13px; color:#94a3b8; font-family:monospace; margin-top:2px;" id="pmMatricula">Matrícula: —</div>
+                        <div style="font-size:12px; color:#cbd5e1; margin-top:4px;" id="pmCareer">Ingeniería en Sistemas Computacionales</div>
+                    </div>
+                    <div id="pmStatusBadge" style="font-size:12px; font-weight:700; padding:4px 12px; border-radius:999px; background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.2); color:white;">● Activo</div>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div style="padding:1.25rem 1.75rem; background:#f8fafc; border-bottom:1px solid #e2e8f0; display:grid; grid-template-columns:repeat(4, 1fr); gap:0.75rem; text-align:center;">
+                <div>
+                    <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:#64748b;">GPA Acum.</div>
+                    <div style="font-size:1.6rem; font-weight:900; color:#002b5e; margin-top:2px;" id="pmGpa">—</div>
+                </div>
+                <div>
+                    <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:#64748b;">Créditos</div>
+                    <div style="font-size:1.15rem; font-weight:900; color:#0f172a; margin-top:6px;" id="pmCredits">—</div>
+                </div>
+                <div>
+                    <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:#64748b;">Aprobadas</div>
+                    <div style="font-size:1.15rem; font-weight:900; color:#0f172a; margin-top:6px;" id="pmPassed">—</div>
+                </div>
+                <div>
+                    <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:#64748b;">En Curso</div>
+                    <div style="font-size:1.15rem; font-weight:900; color:#d97706; margin-top:6px;" id="pmInProgress">—</div>
+                </div>
+            </div>
+
+            <!-- Progress Bar Section -->
+            <div style="padding:1.25rem 1.75rem; border-bottom:1px solid #e2e8f0;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <span style="font-size:12px; font-weight:600; color:#475569;">Progreso hacia la Graduación</span>
+                    <span style="font-size:13px; font-weight:800; color:#002b5e;" id="pmProgressPct">0%</span>
+                </div>
+                <div style="background:#e2e8f0; border-radius:999px; height:10px; overflow:hidden;">
+                    <div style="background:linear-gradient(to right,#0f9d58,#0a7a44); height:10px; border-radius:999px; transition:width 0.8s ease;" id="pmProgressBar" style="width:0%"></div>
+                </div>
+            </div>
+
+            <!-- Contact & Details -->
+            <div style="padding:1.25rem 1.75rem; display:flex; flex-direction:column; gap:10px; font-size:13px; color:#475569;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:16px;">📧</span> <span id="pmEmail">—</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:16px;">🎓</span> <span>Universidad Nacional Pedro Henríquez Ureña (UNPHU)</span>
+                </div>
+            </div>
+
+            <!-- Footer Actions -->
+                        <div style="padding:1rem 1.75rem; background:#f8fafc; border-top:1px solid #e2e8f0; display:flex; justify-content:flex-end; align-items:center;">
+                <button onclick="cerrarSesion()" style="background:#fef2f2; border:1px solid #fecaca; color:#dc2626; padding:8px 18px; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:6px;">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    Cerrar sesión
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- ===== END STUDENT PROFILE MODAL ===== -->
 </body>
 
 </html>
+
+
+
+
+
+
+
+

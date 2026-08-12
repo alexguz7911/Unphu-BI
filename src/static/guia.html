@@ -1,0 +1,347 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>UNPHU BI - Módulo de Alertas Dinámicas y Cumplimiento Normativo (BI Prescriptivo)</title>
+    <meta name="description" content="Módulo de BI Prescriptivo y Reglamento Académico UNPHU: Alertas dinámicas y reglas del negocio para la toma de decisiones y retención estudiantil." />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%233D9744%22/><text x=%2250%22 y=%2272%22 font-family=%22Georgia, serif%22 font-size=%2265%22 font-weight=%22bold%22 fill=%22white%22 text-anchor=%22middle%22>U</text></svg>">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            theme: { extend: {
+                colors: { "primary": "#002b5e", "accent-green": "#0f9d58" },
+                fontFamily: { "sans": ["Inter", "sans-serif"] },
+                boxShadow: { 'soft': '0 4px 20px -2px rgba(0,0,0,0.05)' }
+            }}
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24; }
+        .tip-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .tip-card:hover { transform: translateY(-2px); box-shadow: 0 8px 30px -4px rgba(0,0,0,0.1); }
+        @keyframes pulseSoft { 0%,100%{opacity:1} 50%{opacity:0.6} }
+        .pulse { animation: pulseSoft 2.5s ease-in-out infinite; }
+        .hero-bg { background: linear-gradient(135deg, #001f3f 0%, #003d7a 55%, #0f9d58 100%); }
+        .sticky-nav { position: sticky; top: 2rem; }
+        @media print { nav,.no-print{display:none!important} .tip-card{break-inside:avoid} }
+    </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+    <!-- Nav -->
+    <nav class="bg-[#001f3f] text-white px-4 md:px-8 py-3 flex flex-col md:flex-row justify-between items-center shadow-md relative z-50 gap-4">
+        <div class="flex flex-col md:flex-row items-center gap-3 md:gap-8 w-full md:w-auto">
+            <div class="flex items-center gap-3 font-bold text-xl tracking-wide cursor-pointer" onclick="window.location.href='dashboard.html'">
+                <div class="w-8 h-8 flex items-center justify-center bg-white rounded-md text-[#001f3f] font-bold" style="font-family:'Georgia',serif">U</div>
+                UNPHU BI
+            </div>
+            <div class="flex flex-wrap justify-center gap-3 md:gap-6 text-xs md:text-sm font-medium">
+                <a href="dashboard.html" class="text-[#a9b5c2] pb-1 border-b-2 border-transparent hover:text-white transition-all">Dashboard</a>
+                <a href="historial.html" class="text-[#a9b5c2] pb-1 border-b-2 border-transparent hover:text-white transition-all">Historial</a>
+                <a href="calificaciones.html" class="text-[#a9b5c2] pb-1 border-b-2 border-transparent hover:text-white transition-all">Calificaciones</a>
+                <a href="prematricula.html" class="text-[#a9b5c2] pb-1 border-b-2 border-transparent hover:text-white transition-all">Prematrícula</a>
+                <a href="oficiales.html" class="text-[#a9b5c2] pb-1 border-b-2 border-transparent hover:text-white transition-all">Oficiales</a>
+                <a href="guia.html" class="text-white pb-1 border-b-2 border-white pointer-events-none">Alertas</a>
+            </div>
+        </div>
+        <div class="relative flex items-center gap-3 cursor-pointer" id="userProfileArea" onclick="openProfileModal()">
+            <div class="hidden sm:flex flex-col text-right">
+                <span class="text-sm font-semibold uppercase" id="userName">Cargando...</span>
+                <span class="text-xs text-[#a9b5c2]" id="userIdBox">...</span>
+            </div>
+            <div class="w-9 h-9 flex items-center justify-center rounded-full bg-[#0f9b58] font-bold text-sm border-2 border-white/20 text-white" id="userAvatar">U</div>
+        </div>
+    </nav>
+
+    <!-- Hero Header -->
+    <div class="hero-bg text-white py-12 px-4 md:px-8">
+        <div class="max-w-[1240px] mx-auto">
+            <div class="flex items-center gap-3 mb-3">
+                <span class="px-3 py-1 bg-yellow-400/20 border border-yellow-300/40 text-yellow-300 rounded-full font-bold text-xs uppercase tracking-widest flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-yellow-300 pulse inline-block"></span> BI Prescriptivo & Cumplimiento Normativo
+                </span>
+            </div>
+            <h1 class="text-3xl md:text-5xl font-black mb-3 leading-tight">Módulo de Alertas Dinámicas<br><span class="text-yellow-300">y Cumplimiento Normativo</span></h1>
+            <p class="text-slate-200 text-base md:text-lg max-w-3xl leading-relaxed mb-6">Integración del Reglamento Académico UNPHU con modelos de Inteligencia de Negocios Prescriptivos para recomendar acciones preventivas en tiempo real y evitar la deserción estudiantil.</p>
+        </div>
+    </div>
+
+    <main class="max-w-[1240px] mx-auto w-full px-4 lg:px-8 py-10 flex-1 space-y-12">
+
+
+        <!-- ===== SIMULADOR DE ACCIONES PRESCRIPTIVAS EN TIEMPO REAL ===== -->
+        <section class="bg-white border border-slate-200 rounded-2xl p-6 md:p-8 shadow-soft">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-2xl">auto_mode</span>
+                </div>
+                <div>
+                    <span class="text-xs font-bold text-emerald-600 uppercase tracking-widest block">Motor de Diagnóstico & Prescripción</span>
+                    <h2 class="text-xl md:text-2xl font-extrabold text-slate-900">Alertas Prescriptivas Basadas en tu Historial</h2>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="prescriptiveAlertsContainer">
+                <!-- Dynamic alerts populated via JS -->
+            </div>
+        </section>
+
+        <!-- ===== CLASIFICACIÓN DE NORMAS Y REGLAS DEL NEGOCIO ===== -->
+        <div class="flex gap-10">
+            <!-- Sidebar -->
+            <aside class="hidden lg:block w-56 shrink-0 no-print">
+                <div class="sticky-nav space-y-2 bg-white border border-slate-200 rounded-xl p-4 shadow-soft">
+                    <p class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Reglamento & Normativa</p>
+                    <a href="#criticas" class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold text-red-700 bg-red-50 hover:bg-red-100 transition-all">
+                        <span class="w-2 h-2 rounded-full bg-red-500 shrink-0 pulse"></span> 🔴 Riesgo Crítico (FI / Fraude)
+                    </a>
+                    <a href="#moderadas" class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 transition-all">
+                        <span class="w-2 h-2 rounded-full bg-amber-500 shrink-0"></span> 🟡 Riesgo Moderado (Retiros)
+                    </a>
+                    <a href="#ligeras" class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-all">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span> 🟢 Normas de Convivencia
+                    </a>
+                </div>
+            </aside>
+
+            <!-- Main Rules Content -->
+            <div class="flex-1 min-w-0 space-y-12">
+
+                <!-- CRITICAL -->
+                <section id="criticas" class="space-y-4">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 rounded-xl bg-red-100 text-red-600 flex items-center justify-center font-bold">🔴</div>
+                        <div>
+                            <span class="text-xs font-bold text-red-500 uppercase tracking-widest">Faltas Graves · Riesgo de Expulsión o Baja</span>
+                            <h3 class="text-xl font-extrabold text-slate-900">TOP 3: Decisiones de Alto Riesgo Académico</h3>
+                        </div>
+                    </div>
+
+                    <!-- Rule 1 -->
+                    <div class="tip-card bg-white border border-slate-200 border-l-4 border-l-red-500 rounded-xl p-6 shadow-soft space-y-3">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-xs font-bold bg-red-100 text-red-700 px-2.5 py-1 rounded-full">REGLA 01 · ARTÍCULO 42</span>
+                            <span class="text-xs text-slate-400 font-mono">Baja Automática</span>
+                        </div>
+                        <h4 class="text-lg font-bold text-slate-900">Abandono de Asignaturas sin Retiro Formal (El temido "FI")</h4>
+                        <p class="text-slate-600 text-sm leading-relaxed">Dejar de asistir a clases por más de 8 semanas sin tramitar un retiro en el sistema provoca la reprobación por inasistencia.</p>
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-4 grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                            <div>
+                                <span class="font-bold text-red-800 block mb-1">⚠️ Consecuencia Directa:</span>
+                                <p class="text-red-700">Calificación de "FI" en todas las materias inscritas, colapsando el índice acumulado.</p>
+                            </div>
+                            <div>
+                                <span class="font-bold text-blue-900 block mb-1">🎯 Acción Prescriptiva BI:</span>
+                                <p class="text-blue-800">El sistema alerta la semana 6 y prescribe tramitar el retiro formal antes de la fecha límite.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Rule 2 -->
+                    <div class="tip-card bg-white border border-slate-200 border-l-4 border-l-red-500 rounded-xl p-6 shadow-soft space-y-3">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-xs font-bold bg-red-100 text-red-700 px-2.5 py-1 rounded-full">REGLA 02 · ARTÍCULO 89</span>
+                            <span class="text-xs text-slate-400 font-mono">Integridad Académica</span>
+                        </div>
+                        <h4 class="text-lg font-bold text-slate-900">Cero Tolerancia al Fraude en Exámenes y Evaluaciones</h4>
+                        <p class="text-slate-600 text-sm leading-relaxed">Copiar o llevar material no autorizado en una prueba es una falta grave contra la honestidad institucional.</p>
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-4 grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                            <div>
+                                <span class="font-bold text-red-800 block mb-1">⚠️ Consecuencia Directa:</span>
+                                <p class="text-red-700">Anulación de la materia y suspensión enviada al Comité de Disciplina.</p>
+                            </div>
+                            <div>
+                                <span class="font-bold text-blue-900 block mb-1">🎯 Acción Prescriptiva BI:</span>
+                                <p class="text-blue-800">Ofrecer tutoría académica preventiva previa al período de parciales.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Rule 3 -->
+                    <div class="tip-card bg-white border border-slate-200 border-l-4 border-l-red-500 rounded-xl p-6 shadow-soft space-y-3">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-xs font-bold bg-red-100 text-red-700 px-2.5 py-1 rounded-full">REGLA 03 · ARTÍCULO 94</span>
+                            <span class="text-xs text-slate-400 font-mono">Delito Documental</span>
+                        </div>
+                        <h4 class="text-lg font-bold text-slate-900">Alteración o Falsificación de Registros y Notas</h4>
+                        <p class="text-slate-600 text-sm leading-relaxed">Intentar modificar actas de calificaciones o falsificar documentos institucionales conlleva la sanción máxima.</p>
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-4 grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                            <div>
+                                <span class="font-bold text-red-800 block mb-1">⚠️ Consecuencia Directa:</span>
+                                <p class="text-red-700">Expulsión definitiva y cancelación permanente de la matrícula universitaria.</p>
+                            </div>
+                            <div>
+                                <span class="font-bold text-blue-900 block mb-1">🎯 Acción Prescriptiva BI:</span>
+                                <p class="text-blue-800">Canalizar reclamos de nota formalmente a través de la Dirección de Registro.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- MODERATE -->
+                <section id="moderadas" class="space-y-4">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center font-bold">🟡</div>
+                        <div>
+                            <span class="text-xs font-bold text-amber-500 uppercase tracking-widest">Faltas Moderadas · Control de Retiros</span>
+                            <h3 class="text-xl font-extrabold text-slate-900">Límites de Retiros y Retención Crediticia</h3>
+                        </div>
+                    </div>
+
+                    <!-- Rule 4 -->
+                    <div class="tip-card bg-white border border-slate-200 border-l-4 border-l-amber-400 rounded-xl p-6 shadow-soft space-y-3">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-xs font-bold bg-amber-100 text-amber-700 px-2.5 py-1 rounded-full">REGLA 04 · ARTÍCULO 51</span>
+                            <span class="text-xs text-slate-400 font-mono">Máximo 3 Retiros</span>
+                        </div>
+                        <h4 class="text-lg font-bold text-slate-900">Límite de Retiros por Asignatura</h4>
+                        <p class="text-slate-600 text-sm leading-relaxed">No puedes retirar una misma asignatura más de 3 veces. Al exceder el límite se restringirá tu carga a máximo 12 créditos.</p>
+                    </div>
+
+                    <!-- Rule 5 -->
+                    <div class="tip-card bg-white border border-slate-200 border-l-4 border-l-amber-400 rounded-xl p-6 shadow-soft space-y-3">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-xs font-bold bg-amber-100 text-amber-700 px-2.5 py-1 rounded-full">REGLA 05 · ARTÍCULO 55</span>
+                            <span class="text-xs text-slate-400 font-mono">Calendario Oficial</span>
+                        </div>
+                        <h4 class="text-lg font-bold text-slate-900">Fechas Límite para Retiro de Período</h4>
+                        <p class="text-slate-600 text-sm leading-relaxed">El retiro de período debe realizarse antes de la semana 8 para evitar cobros de aranceles y calificaciones reprobatorias.</p>
+                    </div>
+                </section>
+
+                <!-- LIGHT -->
+                <section id="ligeras" class="space-y-4">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold">🟢</div>
+                        <div>
+                            <span class="text-xs font-bold text-emerald-500 uppercase tracking-widest">Normas Institucionales</span>
+                            <h3 class="text-xl font-extrabold text-slate-900">Convivencia y Orden Institucional</h3>
+                        </div>
+                    </div>
+
+                    <div class="tip-card bg-white border border-slate-200 border-l-4 border-l-emerald-400 rounded-xl p-6 shadow-soft">
+                        <h4 class="text-base font-bold text-slate-900 mb-1">Normativa de Convivencia y Código de Vestimenta</h4>
+                        <p class="text-slate-600 text-sm leading-relaxed">Respetar el orden en aulas, áreas de laboratorio y vestimenta adecuada conforme a las políticas del campus UNPHU.</p>
+                    </div>
+                </section>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 py-8 text-center text-xs border-t border-slate-800 mt-auto">
+        <p>Módulo de Alertas Dinámicas y Cumplimiento Normativo · Sistema BI Prescriptivo UNPHU</p>
+    </footer>
+
+    <script>
+        function openProfileModal() {
+            var modal = document.getElementById('studentProfileModal');
+            if (modal) modal.style.display = 'block';
+        }
+        function closeProfileModal() {
+            var modal = document.getElementById('studentProfileModal');
+            if (modal) modal.style.display = 'none';
+        }
+        function toggleLogoutMenu() { openProfileModal(); }
+        function cerrarSesion() { sessionStorage.clear(); window.location.href = '/'; }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const userName = sessionStorage.getItem('userName') || 'Estudiante';
+            document.getElementById('userName').textContent = userName;
+            document.getElementById('userAvatar').textContent = userName.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase() || 'U';
+            
+            const rawData = sessionStorage.getItem('unphuData');
+            if (rawData) {
+                const d = JSON.parse(rawData);
+                document.getElementById('userIdBox').textContent = 'ID: ' + (d.matricula || '').toLowerCase();
+                
+                // Render Prescriptive Alerts based on student live data
+                renderPrescriptiveEngine(d);
+            }
+        });
+
+        function renderPrescriptiveEngine(d) {
+            const container = document.getElementById('prescriptiveAlertsContainer');
+            if (!container) return;
+
+            const gpa = parseFloat(d.indices?.cumulativeIndex || d.stats?.cumulativeIndex || 0);
+            const passedCount = (d.career_history || []).filter(s => s.qualification >= 70 || ['A','B','C','D'].includes((s.calification||'').toUpperCase())).length;
+            const inProgCount = (d.registered_subjects || d.selected_subjects || []).length;
+
+            let alerts = [];
+
+            // Alert 1: GPA status
+            if (gpa > 0 && gpa < 2.5) {
+                alerts.push({
+                    title: '⚠️ Diagnóstico BI: Índice Acumulado en Zona de Riesgo',
+                    article: 'Art. 62 - Prueba Académica',
+                    desc: `Tu GPA acumulado es de <strong>${gpa.toFixed(2)}</strong>. Un índice menor a 2.0 conduce a prueba académica y restricción de matrícula.`,
+                    prescription: '🎯 Accion Prescriptiva: Solicitar tutoría en coordinación y reducir la carga a un máximo de 12 créditos el próximo cuatrimestre.',
+                    bg: 'bg-amber-50', border: 'border-amber-300', text: 'text-amber-900', badge: 'bg-amber-200 text-amber-900'
+                });
+            } else {
+                alerts.push({
+                    title: '✅ Diagnóstico BI: Estado Académico Regular',
+                    article: 'Art. 40 - Permanencia',
+                    desc: `Tu GPA acumulado de <strong>${gpa.toFixed(2)}</strong> cumple con los estándares institucionales de permanencia.`,
+                    prescription: '🎯 Acción Prescriptiva: Mantener la consistencia y enfocar esfuerzos en las materias de 4 créditos.',
+                    bg: 'bg-emerald-50', border: 'border-emerald-300', text: 'text-emerald-900', badge: 'bg-emerald-200 text-emerald-900'
+                });
+            }
+
+            // Alert 2: In-progress subjects warning
+            if (inProgCount > 0) {
+                alerts.push({
+                    title: '📅 Prescripción de Seguimiento de Cuatrimestre',
+                    article: 'Art. 42 - Control de Inasistencias',
+                    desc: `Tienes <strong>${inProgCount} materias en curso</strong> en el período activo.`,
+                    prescription: '🎯 Acción Prescriptiva: Si no puedes continuar asistiendo a alguna asignatura, tramita el retiro oficial antes de la Semana 8 para evitar la nota FI.',
+                    bg: 'bg-blue-50', border: 'border-blue-300', text: 'text-blue-900', badge: 'bg-blue-200 text-blue-900'
+                });
+            }
+
+            container.innerHTML = alerts.map(a => `
+                <div class="${a.bg} border ${a.border} rounded-xl p-5 shadow-soft flex flex-col justify-between space-y-3">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full ${a.badge}">${a.article}</span>
+                        </div>
+                        <h4 class="font-extrabold ${a.text} text-base mb-1">${a.title}</h4>
+                        <p class="text-xs text-slate-700 leading-relaxed">${a.desc}</p>
+                    </div>
+                    <div class="bg-white/80 border border-slate-200 rounded-lg p-3 text-xs font-bold text-slate-800">
+                        ${a.prescription}
+                    </div>
+                </div>
+            `).join('');
+        }
+    </script>
+    <!-- ===== STUDENT PROFILE MODAL ===== -->
+    <div id="studentProfileModal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); overflow-y:auto;" onclick="if(event.target===this)closeProfileModal()">
+        <div style="max-width:580px; margin:3rem auto; background:white; border-radius:1.5rem; overflow:hidden; box-shadow:0 25px 60px -10px rgba(0,0,0,0.4); animation:dropIn 0.2s ease;">
+            <div style="background:linear-gradient(135deg,#001f3f,#003d7a); padding:2rem; color:white; position:relative;">
+                <button onclick="closeProfileModal()" style="position:absolute; top:1.25rem; right:1.25rem; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); color:white; border-radius:8px; width:36px; height:36px; cursor:pointer; font-size:18px; display:flex; align-items:center; justify-content:center;">✕</button>
+                <div style="display:flex; align-items:center; gap:1.25rem;">
+                    <div style="width:72px; height:72px; border-radius:18px; background:linear-gradient(135deg,#0f9d58,#0a7a44); display:flex; align-items:center; justify-content:center; color:white; font-weight:900; font-size:28px;" id="pmAvatar">U</div>
+                    <div style="flex:1;">
+                        <div style="font-size:1.35rem; font-weight:900; text-transform:uppercase;" id="pmName">Estudiante</div>
+                        <div style="font-size:13px; color:#94a3b8; font-family:monospace;" id="pmMatricula">Matrícula: —</div>
+                    </div>
+                </div>
+            </div>
+            <div style="padding:1.5rem; text-align:center;">
+                <button onclick="cerrarSesion()" style="background:#fef2f2; border:1px solid #fecaca; color:#dc2626; padding:8px 16px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;">Cerrar sesión</button>
+                <button onclick="closeProfileModal()" style="background:#002b5e; color:white; border:none; padding:8px 20px; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; margin-left:10px;">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+
+
