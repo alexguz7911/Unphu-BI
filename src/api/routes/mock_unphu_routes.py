@@ -86,8 +86,50 @@ def semester_grades():
         year = request.args.get('Ano')
         period = request.args.get('IdPeriodo')
         key = f"{year}-{period}"
-        grades = user["semester_grades"].get(key, [])
-        return jsonify({"data": grades})
+        
+        # Si hay calificaciones guardadas (semestres pasados)
+        if key in user["semester_grades"]:
+            return jsonify({"data": user["semester_grades"][key]})
+            
+        # Si es un periodo actual/futuro (2026 en adelante)
+        try:
+            year_num = int(year or 0)
+        except ValueError:
+            year_num = 0
+
+        if year_num >= 2026:
+            enrolled = user.get("officially_enrolled", [])
+            selected = user.get("unofficial_selected", [])
+            
+            grades = []
+            for s in enrolled + selected:
+                code = s.get("codeSubject") or s.get("groupSubjectCode") or s.get("code") or "N/A"
+                name = s.get("subjectName") or s.get("subject") or "Asignatura"
+                
+                try:
+                    cred = int(float(s.get("credits") or 0))
+                except ValueError:
+                    cred = 0
+                
+                # Generar las 5 filas de rubros en curso para cada materia
+                for rubro in ["ASIS", "ACUM1", "ACUM2", "ACUM3", "Eval_Final"]:
+                    grades.append({
+                        "codGroup": code,
+                        "course": name,
+                        "credits": cred,
+                        "letter": "EC",
+                        "qualification": 0,
+                        "indexPeriod": 0.0,
+                        "cumulativeIndex": 0.0,
+                        "codRubro": rubro,
+                        "assignedPoints": "NR",
+                        "points": 1 if rubro == "ASIS" else 10 if rubro == "ACUM3" else 30,
+                        "year": year_num,
+                        "period": int(period or 1)
+                    })
+            return jsonify({"data": grades})
+            
+        return jsonify({"data": []})
     return jsonify({"data": []})
 
 @mock_unphu_bp.route('/officially-enrolled-subjects/', methods=['GET'])
