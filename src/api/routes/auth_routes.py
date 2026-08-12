@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify # type: ignore
 from google.oauth2 import id_token # type: ignore
 from google.auth.transport import requests as google_requests # type: ignore
-from src.config.settings import GOOGLE_CLIENT_ID, UNPHU_API_TOKEN, UNPHU_API_BASE_URL, UNPHU_ACADEMIC_PERSON_ID
+from src.config.settings import GOOGLE_CLIENT_ID, UNPHU_API_TOKEN, UNPHU_API_BASE_URL
 
 auth_bp = Blueprint('auth_routes', __name__)
 
@@ -20,14 +20,40 @@ def auth_google():
     if not token:
         return jsonify({"error": "Token no proporcionado"}), 400
 
+    # Interceptar inicio de sesión de usuario mock
+    if isinstance(token, str) and token.startswith('mock_'):
+        matricula = token.replace('mock_', '').strip()
+        from src.config.mock_users import MOCK_USERS
+        student = MOCK_USERS.get(matricula)
+        if isinstance(student, dict):
+            student_data = student.get('student_data')
+            nombre = 'Estudiante'
+            if isinstance(student_data, dict):
+                nombre = student_data.get('names', 'Estudiante')
+            return jsonify({
+                "success": True,
+                "message": "Autenticación exitosa (Mock)",
+                "matricula": matricula,
+                "name": nombre,
+                "unphu_token": f"mock_token_{matricula}",
+                "unphu_api_url": f"{request.host_url.rstrip('/')}/api/mock/unphu"
+            })
+        else:
+            return jsonify({"error": f"Usuario mock '{matricula}' no configurado"}), 404
+
     try:
         # Validar el token con los servidores de Google
+        # TEMP: clock_skew aumentado porque el reloj del sistema tiene desfase.
+        # Sincroniza el reloj de Windows y vuelve a poner clock_skew_in_seconds=10
         idinfo = id_token.verify_oauth2_token(
-            token, google_requests.Request(), GOOGLE_CLIENT_ID, clock_skew_in_seconds=60
+            token, google_requests.Request(), GOOGLE_CLIENT_ID, clock_skew_in_seconds=86400
         )
 
         email = idinfo.get('email')
         nombre = idinfo.get('name')
+
+        if not email:
+            return jsonify({"error": "No se pudo obtener el correo de Google"}), 400
 
         # Filtro de seguridad institucional
         if not email.endswith("@unphu.edu.do"):
@@ -36,17 +62,15 @@ def auth_google():
 
         matricula = email.split('@')[0]
 
-        res = {
+        # Devolver credenciales para que el cliente llame a la API de la UNPHU directamente
+        return jsonify({
             "success": True,
             "message": "Autenticación exitosa",
             "matricula": matricula,
             "name": nombre,
             "unphu_token": UNPHU_API_TOKEN,
             "unphu_api_url": UNPHU_API_BASE_URL
-        }
-        if UNPHU_ACADEMIC_PERSON_ID:
-            res["academic_person_id"] = UNPHU_ACADEMIC_PERSON_ID
-        return jsonify(res)
+        })
 
     except ValueError as e:
         import traceback
