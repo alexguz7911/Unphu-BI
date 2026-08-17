@@ -1,3 +1,54 @@
-.vercel
+# ==== Python ====
+venv/
+.venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+.pytest_cache/
+.mypy_cache/
 
-.vercel
+# ==== Variables de entorno y secretos ====
+.env
+.env.*
+!.env.example
+
+# ==== Vercel ====
+.vercel/
+
+# ==== Bases de datos locales / dumps ====
+*.sql.bak
+*.dump
+*.sqlite3
+*.db
+
+# ==== Logs ====
+*.log
+logs/
+
+# ==== Sistema operativo ====
+.DS_Store
+Thumbs.db
+
+# ==== Editores / IDEs ====
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ==== Antigravity / agentes ====
+.agents/cache/
+.agents/logs/
+.agents/tmp/
+
+# ==== Node ====
+node_modules/
+package-lock.json
+
+# ==== Archivos temporales ====
+*.tmp
+*.bak
+*~

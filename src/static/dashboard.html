@@ -988,11 +988,13 @@
                     else                 { badge.textContent = '● Activo'; badge.style.background = 'rgba(255,255,255,0.15)'; badge.style.color = '#fff'; }
                 }
 
-                var cA = parseInt(d.stats?.creditosAprobados || 0);
-                var cT = parseInt(d.stats?.totalCreditos || 216);
+                var cT = parseInt(d.stats?.totalCreditos || 0);
+                // Usar el mismo valor ya calculado por el semáforo (garantiza que ambos % coincidan)
+                var cA = parseInt(sessionStorage.getItem('_creditosAprobadosReales') || d.stats?.creditosAprobados || 0);
                 var credEl = document.getElementById('pmCredits'); if(credEl) credEl.textContent = cA + ' / ' + cT;
 
-                var pct = cT > 0 ? Math.min(100, Math.round((cA / cT) * 100)) : 0;
+                var pct = parseInt(sessionStorage.getItem('_progressPct') || 0);
+                if (!pct && cT > 0) pct = Math.min(100, Math.round((cA / cT) * 100)); // fallback defensivo
                 var pctEl = document.getElementById('pmProgressPct'); if(pctEl) pctEl.textContent = pct + '%';
                 var bar = document.getElementById('pmProgressBar'); if(bar) setTimeout(function(){ bar.style.width = pct + '%'; }, 100);
 
@@ -1127,7 +1129,7 @@
                         <div class="mini-value" id="indiceAcumuladoVal">3.25</div>
                     </div>
                     <div class="mini-stat">
-                        <div class="mini-label">Ranking</div>
+                        <div class="mini-label">RANKING</div>
                         <div class="mini-value" id="rankingEstudianteVal">#--</div>
                     </div>
                     <div class="mini-stat">
@@ -1346,6 +1348,9 @@
                                 const porcentaje = Math.round((creditosAprobadosReales / stats.totalCreditos) * 100);
                                 document.getElementById('progressPercent').textContent = porcentaje + "%";
                                 document.getElementById('progressCircle').style.background = `conic-gradient(var(--primary-green) ${porcentaje}%, var(--border-color) 0)`;
+                                // Guardar para que el modal de perfil use exactamente el mismo valor
+                                sessionStorage.setItem('_progressPct', porcentaje);
+                                sessionStorage.setItem('_creditosAprobadosReales', creditosAprobadosReales);
                             }
 
                             // Créditos Acumulados (cursados incluyendo repeticiones)

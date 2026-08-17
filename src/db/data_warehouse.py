@@ -65,11 +65,15 @@ class DataWareHouseSync:
             else:
                 id_carrera = hash(carrera_full) % 10000000 # Rango mayor para evitar colisiones
             
+            facultad_carrera = api_data.get('student_data', {}).get('facultad', '') or ''
+
             cursor.execute("""
-                INSERT INTO Dim_Carrera (IdCarrera, NombreCarrera) 
-                VALUES (%s, %s)
-                ON CONFLICT (IdCarrera) DO UPDATE SET NombreCarrera = EXCLUDED.NombreCarrera;
-            """, (id_carrera, carrera_full))
+                INSERT INTO Dim_Carrera (IdCarrera, NombreCarrera, Facultad) 
+                VALUES (%s, %s, %s)
+                ON CONFLICT (IdCarrera) DO UPDATE 
+                    SET NombreCarrera = EXCLUDED.NombreCarrera,
+                        Facultad = CASE WHEN EXCLUDED.Facultad != '' THEN EXCLUDED.Facultad ELSE Dim_Carrera.Facultad END;
+            """, (id_carrera, carrera_full, facultad_carrera))
             
             
             # --- 4. ACTUALIZAR ESTUDIANTE CON SU CARRERA ---
@@ -233,8 +237,8 @@ class DataWareHouseSync:
         try:
             cursor = conn.cursor()
             query = """
-                WITH CTE_TargetCareerName AS (
-                    SELECT TRIM(UPPER(C.NombreCarrera)) as CareerName
+                WITH CTE_TargetFacultad AS (
+                    SELECT COALESCE(TRIM(UPPER(C.Facultad)), TRIM(UPPER(C.NombreCarrera))) as FacultadName
                     FROM Dim_Estudiante E
                     JOIN Dim_Carrera C ON E.IdCarreraActiva = C.IdCarrera
                     WHERE E.Matricula = %s
@@ -248,7 +252,8 @@ class DataWareHouseSync:
                     FROM Dim_Estudiante E
                     JOIN Fact_Calificaciones F ON E.IdPersona = F.IdPersona
                     JOIN Dim_Carrera C ON E.IdCarreraActiva = C.IdCarrera
-                    WHERE TRIM(UPPER(C.NombreCarrera)) IN (SELECT CareerName FROM CTE_TargetCareerName)
+                    WHERE COALESCE(TRIM(UPPER(C.Facultad)), TRIM(UPPER(C.NombreCarrera)))
+                          IN (SELECT FacultadName FROM CTE_TargetFacultad)
                       AND F.IndiceAcumulado > 0.1
                 ),
                 CTE_StudentIndices AS (
@@ -266,7 +271,7 @@ class DataWareHouseSync:
                 SELECT 
                     (SELECT Posicion FROM CTE_Ranked WHERE Matricula = %s) as RankEstudiante,
                     (SELECT COUNT(*) FROM CTE_Ranked) as TotalEstudiantes,
-                    (SELECT AVG(CAST(IndiceActual as FLOAT)) FROM CTE_Ranked) as PromedioCarrera
+                    (SELECT AVG(CAST(IndiceActual as FLOAT)) FROM CTE_Ranked) as PromedioFacultad
             """
             cursor.execute(query, (matricula, matricula))
             row = cursor.fetchone()
