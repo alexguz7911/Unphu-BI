@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 
 <head>
@@ -531,7 +531,8 @@
 
                     const val = (found.assigned !== undefined && found.assigned !== null && found.assigned !== '' && found.assigned !== 'NR')
                         ? found.assigned
-                        : ((found.points !== undefined && found.points !== null && found.points !== '' && found.points > 0) ? found.points : 'NR');
+                        : 'NR';
+
 
                     if (val === 'NR' || val === null || val === undefined || val === '') return 'NR';
 
@@ -621,9 +622,13 @@
                 if (firstKey) {
                     const idxPeriod = parseFloat(grouped[firstKey].indexPeriod) || 0;
                     const idxCum = parseFloat(grouped[firstKey].cumulativeIndex) || 0;
-                    document.getElementById('indiceSemestre').textContent = idxPeriod > 0 ? idxPeriod.toFixed(2) : (storedSem > 0 ? storedSem.toFixed(2) : '—');
+                    const allEC = Object.values(grouped).every(g => g.letter === 'EC');
+
+                    document.getElementById('indiceSemestre').textContent = (!allEC && idxPeriod > 0) ? idxPeriod.toFixed(2) : '—';
                     document.getElementById('indiceAcumulado').textContent = idxCum > 0 ? idxCum.toFixed(2) : (storedCum > 0 ? storedCum.toFixed(2) : '0.00');
                 }
+
+
 
                 // Render each subject row
                 Object.keys(grouped).forEach(code => {
