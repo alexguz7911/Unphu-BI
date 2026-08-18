@@ -429,29 +429,25 @@
             document.getElementById('userAvatar').textContent = initials || 'U';
 
             // 2. Set Default Form Values (based on current period)
-            let defaultYear = new Date().getFullYear();
-            let defaultPeriodId = 2; // Default for July = Period 2 (Mayo - Agosto)
-
-            const nowMonth = new Date().getMonth() + 1; // 1..4 = P1, 5..8 = P2, 9..12 = P3
-            if (nowMonth >= 1 && nowMonth <= 4) defaultPeriodId = 1;
-            else if (nowMonth >= 5 && nowMonth <= 8) defaultPeriodId = 2;
-            else defaultPeriodId = 3;
+            let defaultYear = 2026;
+            let defaultPeriodId = 3; // Default to Period 3 (Septiembre - Diciembre 2026)
 
             if (unphuData.current_period && unphuData.current_period.length > 0) {
                 const currentP = unphuData.current_period[0];
                 const yVal = parseInt(currentP.Ano || currentP.Año || currentP.year || currentP.Year);
                 if (!isNaN(yVal) && yVal > 2000) defaultYear = yVal;
 
-                const pVal = parseInt(currentP.IdPeriodo || currentP.id || currentP.Id || currentP.numPeriodo);
+                const pVal = parseInt(currentP.IdPeriodo || currentP.id || currentP.Id || currentP.numeroPeriodo || currentP.numPeriodo);
                 if (!isNaN(pVal) && pVal >= 1 && pVal <= 3) {
                     defaultPeriodId = pVal;
-                } else if (typeof currentP.Periodo === 'string') {
-                    const pStr = currentP.Periodo.toUpperCase();
-                    if (pStr.includes('MAYO') || pStr.includes('AGO') || pStr.includes('-2')) defaultPeriodId = 2;
-                    else if (pStr.includes('SEP') || pStr.includes('DIC') || pStr.includes('-3')) defaultPeriodId = 3;
+                } else if (typeof currentP.Periodo === 'string' || typeof currentP.periodName === 'string') {
+                    const pStr = String(currentP.Periodo || currentP.periodName || '').toUpperCase();
+                    if (pStr.includes('SEP') || pStr.includes('DIC') || pStr.includes('-3')) defaultPeriodId = 3;
+                    else if (pStr.includes('MAYO') || pStr.includes('AGO') || pStr.includes('-2')) defaultPeriodId = 2;
                     else if (pStr.includes('ENE') || pStr.includes('ABR') || pStr.includes('-1')) defaultPeriodId = 1;
                 }
             }
+
 
             document.getElementById('searchYear').value = defaultYear;
             document.getElementById('searchPeriod').value = defaultPeriodId;
@@ -590,7 +586,9 @@
                     ? unphuData.registered_subjects
                     : (unphuData.selected_subjects || []);
 
-                if (yearVal === defaultYear && periodVal === defaultPeriodId) {
+                // Únicamente fusionar materias en curso en el cuatrimestre activo (Septiembre - Diciembre 2026 = período 3)
+                if (yearVal === 2026 && periodVal === 3) {
+
                     activeEnrolled.forEach(s => {
                         const codeKey = (s.groupSubjectCode || s.codeAsignatura || s.codeSubject || s.code || s.Asignatura || 'N/A').trim();
                         // Check if subject already in grouped by code or course name
