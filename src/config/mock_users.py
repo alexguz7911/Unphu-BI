@@ -286,13 +286,15 @@ MOCK_USERS = {
             {"codeSubject": "INF-379", "subject": "INTRODUCCIÓN A LA CIENCIA DE DATOS",           "credits": "3", "lyrics": "A", "number": "97", "semester": "MAY-AGO 2026", "observations": "", "codeRequired": "INF-270,INF-277,MAT-339", "pensumCredit": _pensum_credit_inf},
             {"codeSubject": "ECO-100", "subject": "INTRODUCCIÓN A LA ECONOMÍA",                   "credits": "3", "lyrics": "B", "number": "87", "semester": "MAY-AGO 2026", "observations": "", "codeRequired": "MAT-160",           "pensumCredit": _pensum_credit_inf},
             {"codeSubject": "ADM-105", "subject": "PRINCIPIOS DE ADMINISTRACIÓN",                 "credits": "3", "lyrics": "A", "number": "91", "semester": "MAY-AGO 2026", "observations": "", "codeRequired": "",                  "pensumCredit": _pensum_credit_inf},
+            # ── Período 9 (SEP-DIC 2026 - En Curso) ──
+            {"codeSubject": "INF-375", "subject": "PRINCIPIOS DE SISTEMAS OPERATIVOS",             "credits": "3", "lyrics": "EC", "number": "", "semester": "SEP-DIC 2026", "observations": "AP", "codeRequired": "INF-273",                 "pensumCredit": _pensum_credit_inf},
+            {"codeSubject": "INF-377", "subject": "REDES DE COMPUTADORAS II",                      "credits": "3", "lyrics": "EC", "number": "", "semester": "SEP-DIC 2026", "observations": "AP", "codeRequired": "INF-372",                 "pensumCredit": _pensum_credit_inf},
+            {"codeSubject": "INF-378", "subject": "SISTEMAS CIBERFÍSICOS II",                      "credits": "3", "lyrics": "EC", "number": "", "semester": "SEP-DIC 2026", "observations": "AP", "codeRequired": "INF-372,INF-373",         "pensumCredit": _pensum_credit_inf},
         ],
 
-        # Materias restantes del P8-P13
+        # Materias restantes del P9-P13
         pending_subjects=[
-            {"codeSubject": "INF-375", "subject": "PRINCIPIOS DE SISTEMAS OPERATIVOS",             "credits": 3, "lyrics": "", "number": "", "semester": "", "observations": "", "codeRequired": "INF-273",                   "pensumCredit": _pensum_credit_inf},
-            {"codeSubject": "INF-377", "subject": "REDES DE COMPUTADORAS II",                      "credits": 3, "lyrics": "", "number": "", "semester": "", "observations": "", "codeRequired": "INF-372",                   "pensumCredit": _pensum_credit_inf},
-            {"codeSubject": "INF-378", "subject": "SISTEMAS CIBERFÍSICOS II",                      "credits": 3, "lyrics": "", "number": "", "semester": "", "observations": "", "codeRequired": "INF-372,INF-373",           "pensumCredit": _pensum_credit_inf},
+
             # P9
             {"codeSubject": "INF-380", "subject": "ADMINISTRACIÓN DE PROYECTOS",                   "credits": 3, "lyrics": "", "number": "", "semester": "", "observations": "", "codeRequired": "ADM-105",                   "pensumCredit": _pensum_credit_inf},
             {"codeSubject": "INF-384", "subject": "AUDITORÍA DE SISTEMAS COMPUTACIONALES",         "credits": 3, "lyrics": "", "number": "", "semester": "", "observations": "", "codeRequired": "ADM-105,INF-370,INF-374",   "pensumCredit": _pensum_credit_inf},
