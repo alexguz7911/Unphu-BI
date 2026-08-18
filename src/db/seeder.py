@@ -68,4 +68,5 @@ if __name__ == "__main__":
     else:
         print(f"💡 No se encontró '{seed_file}'. Crea el archivo con una matrícula por línea o pasa una como argumento.")
         # Ejemplo de uso interno si se quiere probar rápido
-        # run_seeder(manual_list=["aj20-1205", "ms21-2083"])
+        # run_seeder(manual_list=["aj20-1205", "ms24-2083"])
+

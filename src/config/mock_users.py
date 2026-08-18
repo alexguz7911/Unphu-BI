@@ -216,11 +216,12 @@ MOCK_USERS = {
     # 1. MARÍA SANTOS — Ing. Sistemas — ~60% completado (período 7-8) — GPA 3.80
     #    Situación: estudiante destacada, en la recta final de la carrera.
     # ──────────────────────────────────────────────────────────────────────────
-    "ms21-2083": generate_mock_student(
-        matricula="ms21-2083",
+    "ms24-2083": generate_mock_student(
+        matricula="ms24-2083",
         names="MARIA ELENA SANTOS ALMONTE",
         career_name=f"INGENIERIA EN SISTEMAS COMPUTACIONALES {_pensum_credit_inf}/3-15-15",
-        id_persona=212083,
+        id_persona=242083,
+
         id_carrera=251,
         total_pensum_credits=217,
         start_year=2024,

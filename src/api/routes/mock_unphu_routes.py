@@ -7,7 +7,8 @@ mock_unphu_bp = Blueprint('mock_unphu_routes', __name__, url_prefix='/api/mock/u
 def get_matricula_by_id_persona(id_persona: str) -> str:
     """Mapea el IdPersona mock de vuelta a su matrícula."""
     id_persona = str(id_persona).strip()
-    if id_persona == "212083": return "ms21-2083"
+    if id_persona == "242083" or id_persona == "212083": return "ms24-2083"
+
     if id_persona == "220941": return "cm22-0941"
     if id_persona == "190112": return "hp19-0112"
     if id_persona == "211402": return "mr21-1402"
