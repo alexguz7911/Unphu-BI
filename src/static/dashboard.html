@@ -1310,30 +1310,10 @@
 
                         if (unphuData.stats) {
                             const stats = unphuData.stats;
-                            const totalCreditosSeguro = stats.totalCreditos || 0;
+                            const totalCreditosSeguro = stats.totalCreditos || 220;
+                            const creditosAprobadosReales = stats.creditosAprobados || 0;
 
-                            // Calcular pendientes de manera infalible sumando los créditos de las materias faltantes en tiempo real
-                            let pendientesReales = 0;
-                            if (Array.isArray(unphuData.pending_subjects)) {
-                                pendientesReales = unphuData.pending_subjects.reduce((acc, item) => acc + (parseInt(item.credits) || parseInt(item.creditos) || parseInt(item.Creditos) || 0), 0);
-                            } else {
-                                pendientesReales = Math.max(0, stats.creditosPendientes || 0); // Respaldo if pending list not present
-                            }
-
-                            // Asegurarse de que el aprobado total tenga sentido con respecto al pensum  
-                            let creditosAprobadosReales = stats.creditosAprobados || 0;
-                            if (pendientesReales >= 0 && totalCreditosSeguro > 0 && (totalCreditosSeguro - pendientesReales) > creditosAprobadosReales) {
-                                creditosAprobadosReales = totalCreditosSeguro - pendientesReales;
-                            }
-
-                            document.getElementById('creditosAprobados').textContent = creditosAprobadosReales;
-                            document.getElementById('creditosPendientesCard').textContent = pendientesReales;
-
-                            const materiasFaltantesCount = Array.isArray(unphuData.pending_subjects) ? unphuData.pending_subjects.length : 0;
-                            const descMaterias = materiasFaltantesCount === 1 ? "Materia" : "Materias";
-                            document.getElementById('materiasFaltantesTxt').textContent = materiasFaltantesCount + " " + descMaterias;
-
-                            // Insertar creditos en curso reales (basado en materias oficiales matriculadas)
+                            // Insertar créditos en curso reales (basado en materias oficiales matriculadas)
                             let creditosEnCursoReales = 0;
                             if (unphuData.registered_subjects && unphuData.registered_subjects.length > 0) {
                                 creditosEnCursoReales = unphuData.registered_subjects.reduce((sum, s) => {
@@ -1343,19 +1323,45 @@
                             } else if (stats.creditosEnCurso !== undefined) {
                                 creditosEnCursoReales = stats.creditosEnCurso || 0;
                             }
+
+                            // Materias en curso (códigos) para descontar de materias pendientes
+                            const inProgCodes = new Set((unphuData.registered_subjects || unphuData.selected_subjects || []).map(s => (s.groupSubjectCode || s.codeAsignatura || s.codeSubject || s.code || '').trim()));
+
+                            // Materias faltantes/pendientes reales
+                            let pendingSubjectsOnly = [];
+                            if (Array.isArray(unphuData.pending_subjects)) {
+                                pendingSubjectsOnly = unphuData.pending_subjects.filter(s => {
+                                    const code = (s.codeSubject || s.code || '').trim();
+                                    return code && !inProgCodes.has(code);
+                                });
+                            }
+
+                            let pendientesReales = 0;
+                            if (pendingSubjectsOnly.length > 0) {
+                                pendientesReales = pendingSubjectsOnly.reduce((acc, item) => acc + (parseInt(item.credits) || parseInt(item.creditos) || parseInt(item.Creditos) || 0), 0);
+                            } else {
+                                pendientesReales = Math.max(0, totalCreditosSeguro - creditosAprobadosReales - creditosEnCursoReales);
+                            }
+
+                            document.getElementById('creditosAprobados').textContent = creditosAprobadosReales;
+                            document.getElementById('creditosPendientesCard').textContent = pendientesReales;
                             document.getElementById('creditosEnCursoCard').textContent = creditosEnCursoReales;
 
-                            if (stats.totalCreditos > 0) {
-                                const porcentaje = Math.round((creditosAprobadosReales / stats.totalCreditos) * 100);
+                            const materiasFaltantesCount = pendingSubjectsOnly.length > 0 ? pendingSubjectsOnly.length : (Array.isArray(unphuData.pending_subjects) ? unphuData.pending_subjects.length : 0);
+                            const descMaterias = materiasFaltantesCount === 1 ? "Materia" : "Materias";
+                            document.getElementById('materiasFaltantesTxt').textContent = materiasFaltantesCount + " " + descMaterias;
+
+                            if (totalCreditosSeguro > 0) {
+                                const porcentaje = Math.round((creditosAprobadosReales / totalCreditosSeguro) * 100);
                                 document.getElementById('progressPercent').textContent = porcentaje + "%";
                                 document.getElementById('progressCircle').style.background = `conic-gradient(var(--primary-green) ${porcentaje}%, var(--border-color) 0)`;
-                                // Guardar para que el modal de perfil use exactamente el mismo valor
                                 sessionStorage.setItem('_progressPct', porcentaje);
                                 sessionStorage.setItem('_creditosAprobadosReales', creditosAprobadosReales);
                             }
 
-                            // Créditos Acumulados (cursados incluyendo repeticiones)
-                            document.getElementById('creditosAcumuladosVal').textContent = stats.creditosEvaluados || 0;
+                            // Créditos Acumulados
+                            document.getElementById('creditosAcumuladosVal').textContent = creditosAprobadosReales;
+
                             const cuIndex = unphuData.indices ? unphuData.indices.cumulativeIndex : 0;
                             const estatusNode = document.getElementById('estatusAcadVal');
                             const containerEstatus = document.getElementById('estatusAcadContainer');
