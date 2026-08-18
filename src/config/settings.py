@@ -1,5 +1,24 @@
 import os
 
+# Loader manual de .env — no requiere python-dotenv instalado
+def _load_env():
+    env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '.env')
+    env_path = os.path.normpath(env_path)
+    if not os.path.exists(env_path):
+        return
+    with open(env_path, encoding='utf-8') as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith('#') or '=' not in line:
+                continue
+            key, _, val = line.partition('=')
+            key = key.strip()
+            val = val.strip().strip('"').strip("'")
+            if key and key not in os.environ:  # no sobreescribe vars ya seteadas
+                os.environ[key] = val
+_load_env()
+
+
 # Tu ID de cliente (obtenido el 19/02/2026)
 GOOGLE_CLIENT_ID = "88334184799-pimhmhk8fvar5mpttnko7dlvljl21o4i.apps.googleusercontent.com"
 

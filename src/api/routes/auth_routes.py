@@ -110,3 +110,46 @@ def sync_student_data():
         import traceback
         traceback.print_exc()
         return jsonify({"ok": False, "error": str(e)}), 500
+
+
+# ── Proxy local para resolver CORS en desarrollo ──────────────────────────────
+# El browser no puede llamar directamente a la API UNPHU desde localhost porque
+# la API no envía Access-Control-Allow-Origin en respuestas 200.
+# Este proxy recibe la llamada del browser (mismo origen = sin CORS) y la
+# reenvía desde Flask, que corre en la máquina del estudiante (IP de RD = sin bloqueo geo).
+# En producción (Vercel) el browser llama directo; este endpoint no se usa.
+@auth_bp.route('/api/unphu-proxy/<path:subpath>', methods=['GET', 'OPTIONS'])
+def unphu_proxy(subpath):
+    if request.method == 'OPTIONS':
+        from flask import Response
+        resp = Response('', status=204)
+        resp.headers['Access-Control-Allow-Origin'] = '*'
+        resp.headers['Access-Control-Allow-Headers'] = 'Authorization, Content-Type'
+        resp.headers['Access-Control-Allow-Methods'] = 'GET, OPTIONS'
+        return resp
+
+    import requests as req
+    import urllib3
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+    # Reconstruir la URL destino con query string
+    target_url = f"{UNPHU_API_BASE_URL}/{subpath}"
+    query_string = request.query_string.decode('utf-8')
+    if query_string:
+        target_url += '?' + query_string
+
+    # Reenviar el Authorization header que mandó el browser
+    auth_header = request.headers.get('Authorization', '')
+    headers = {}
+    if auth_header:
+        headers['Authorization'] = auth_header
+
+    try:
+        r = req.get(target_url, headers=headers, verify=False, timeout=10)
+        from flask import Response
+        resp = Response(r.content, status=r.status_code, content_type=r.headers.get('Content-Type', 'application/json'))
+        resp.headers['Access-Control-Allow-Origin'] = '*'
+        return resp
+    except Exception as e:
+        return jsonify({"error": str(e)}), 502
+

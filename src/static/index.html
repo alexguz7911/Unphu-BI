@@ -676,9 +676,11 @@
             }
 
             if (!studentData || Object.keys(studentData).length === 0) {
-                // Intentar detectar si es CORS probando sin Authorization header
-                var testMsg = 'No se pudo conectar con el sistema base de la UNPHU.\n\nPosibles causas:\n- Error CORS (abre F12 > Console para ver el error exacto)\n- API UNPHU no accesible desde tu red actual\n\nRevisar consola del navegador para más detalles.';
-                throw new Error(testMsg);
+                // /student-data/ puede devolver 403 si el token no tiene ese permiso (ej. admissionKey).
+                // En ese caso usamos los datos de Google OAuth como fallback y continuamos normalmente.
+                // El idPersona se resuelve por JWT o por matrícula en la línea de abajo.
+                console.warn('[UNPHU] /student-data/ no disponible (403 o vacío). Usando datos de Google OAuth como fallback.');
+                studentData = {};
             }
 
             // IMPORTANT: Decode the JWT token to get the academic person ID.
@@ -705,6 +707,7 @@
             var careers = Array.isArray(careersRaw) ? careersRaw : [];
             var activeCareer = careers[0] || {};
             var idCarrera = String(activeCareer.IdCarrera || '0');
+
 
             // 3. Historial pendiente por carrera (en paralelo)
             var histArrays = await Promise.all(careers.map(function(car) {
@@ -899,9 +902,18 @@
 
                 var { matricula, name, unphu_token, unphu_api_url, academic_person_id } = authData;
 
-                // Paso 2: llamar a la API de UNPHU directamente desde el navegador usando el token devuelto por el servidor
+                // En localhost el browser no puede llamar directo a la API UNPHU por CORS.
+                // El proxy Flask reenvía la petición desde la máquina del estudiante (IP de RD) sin restricción geográfica.
+                // En producción (Vercel) se sigue usando la URL directa para bypass geográfico.
+                var isLocal = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+                var effective_api_url = isLocal
+                    ? (window.location.origin + '/api/unphu-proxy')
+                    : unphu_api_url;
+
+                // Paso 2: llamar a la API de UNPHU (directa en prod / proxy en local)
                 // academic_person_id overrides the JWT user.id to use the correct UNPHU academic system person ID
-                var apiData = await fetchUnphuData(matricula, name, unphu_token, unphu_api_url, academic_person_id);
+                var apiData = await fetchUnphuData(matricula, name, unphu_token, effective_api_url, academic_person_id);
+
 
                 setStepDone('step3');
                 setStepActive('step4');
