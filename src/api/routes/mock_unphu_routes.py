@@ -63,13 +63,14 @@ def current_period():
     """Retorna el período actual simulado."""
     return jsonify({
         "data": {
-            "id": 105,
+            "id": 107,
             "year": 2026,
-            "numeroPeriodo": 1,
-            "periodName": "Enero - Abril 2026",
+            "numeroPeriodo": 3,
+            "periodName": "Septiembre - Diciembre 2026",
             "esPeriodoActual": True
         }
     })
+
 
 @mock_unphu_bp.route('/pending-grades-students/', methods=['GET'])
 def pending_grades():
