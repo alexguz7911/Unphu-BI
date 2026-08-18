@@ -321,15 +321,16 @@ MOCK_USERS = {
         ],
 
         officially_enrolled=[
-            {"codeSubject": "INF-375", "subjectName": "PRINCIPIOS DE SISTEMAS OPERATIVOS",        "credits": "3", "section": "01", "teacher": "Ing. José Manuel Ramírez"},
-            {"codeSubject": "INF-377", "subjectName": "REDES DE COMPUTADORAS II",                 "credits": "3", "section": "02", "teacher": "Ing. Francisco García"},
-            {"codeSubject": "INF-378", "subjectName": "SISTEMAS CIBERFÍSICOS II",                 "credits": "3", "section": "01", "teacher": "Ing. Carlos Rosario"},
+            {"codeSubject": "INF-375", "subjectName": "PRINCIPIOS DE SISTEMAS OPERATIVOS",        "credits": "3", "section": "01", "teacher": "Ing. José Manuel Ramírez", "schedule": "Lu / Mi 18:00 - 20:00", "period": "Septiembre - Diciembre 2026", "observations": "AP"},
+            {"codeSubject": "INF-377", "subjectName": "REDES DE COMPUTADORAS II",                 "credits": "3", "section": "02", "teacher": "Ing. Francisco García",     "schedule": "Ma / Ju 16:00 - 18:00", "period": "Septiembre - Diciembre 2026", "observations": "AP"},
+            {"codeSubject": "INF-378", "subjectName": "SISTEMAS CIBERFÍSICOS II",                 "credits": "3", "section": "01", "teacher": "Ing. Carlos Rosario",      "schedule": "Vi 18:00 - 22:00",       "period": "Septiembre - Diciembre 2026", "observations": "AP"},
         ],
         unofficial_selected=[
-            {"codeSubject": "INF-375", "subjectName": "PRINCIPIOS DE SISTEMAS OPERATIVOS",        "credits": "3", "section": "01", "teacher": "Ing. José Manuel Ramírez"},
-            {"codeSubject": "INF-377", "subjectName": "REDES DE COMPUTADORAS II",                 "credits": "3", "section": "02", "teacher": "Ing. Francisco García"},
-            {"codeSubject": "INF-378", "subjectName": "SISTEMAS CIBERFÍSICOS II",                 "credits": "3", "section": "01", "teacher": "Ing. Carlos Rosario"},
+            {"codeSubject": "INF-375", "subjectName": "PRINCIPIOS DE SISTEMAS OPERATIVOS",        "credits": "3", "section": "01", "teacher": "Ing. José Manuel Ramírez", "schedule": "Lu / Mi 18:00 - 20:00", "period": "Septiembre - Diciembre 2026", "observations": "AP"},
+            {"codeSubject": "INF-377", "subjectName": "REDES DE COMPUTADORAS II",                 "credits": "3", "section": "02", "teacher": "Ing. Francisco García",     "schedule": "Ma / Ju 16:00 - 18:00", "period": "Septiembre - Diciembre 2026", "observations": "AP"},
+            {"codeSubject": "INF-378", "subjectName": "SISTEMAS CIBERFÍSICOS II",                 "credits": "3", "section": "01", "teacher": "Ing. Carlos Rosario",      "schedule": "Vi 18:00 - 22:00",       "period": "Septiembre - Diciembre 2026", "observations": "AP"},
         ],
+
 
         gpa_target=3.80,
         facultad="Facultad de Ciencias y Tecnología",
@@ -444,15 +445,16 @@ MOCK_USERS = {
         ],
 
         officially_enrolled=[
-            {"codeSubject": "ARQ-620", "subjectName": "ARQUITECTURA BIOCLIMÁTICA",                "credits": "3", "section": "01", "teacher": "Arq. Norman Foster"},
-            {"codeSubject": "ARQ-607", "subjectName": "DISEÑO VII",                               "credits": "5", "section": "01", "teacher": "Arq. Frank Gehry"},
-            {"codeSubject": "ARQ-405", "subjectName": "HISTORIA DE LA ARQUITECTURA DOMINICANA",   "credits": "3", "section": "02", "teacher": "Arq. José Ramón Báez López-Penha"},
+            {"codeSubject": "ARQ-620", "subjectName": "ARQUITECTURA BIOCLIMÁTICA",                "credits": "3", "section": "01", "teacher": "Arq. Norman Foster", "schedule": "Lu / Mi 14:00 - 16:00", "period": "Septiembre - Diciembre 2026", "observations": "AP"},
+            {"codeSubject": "ARQ-607", "subjectName": "DISEÑO VII",                               "credits": "5", "section": "01", "teacher": "Arq. Frank Gehry", "schedule": "Ma / Ju 08:00 - 12:00", "period": "Septiembre - Diciembre 2026", "observations": "AP"},
+            {"codeSubject": "ARQ-405", "subjectName": "HISTORIA DE LA ARQUITECTURA DOMINICANA",   "credits": "3", "section": "02", "teacher": "Arq. José Ramón Báez López-Penha", "schedule": "Vi 16:00 - 19:00", "period": "Septiembre - Diciembre 2026", "observations": "AP"},
         ],
         unofficial_selected=[
-            {"codeSubject": "ARQ-620", "subjectName": "ARQUITECTURA BIOCLIMÁTICA",                "credits": "3", "section": "01", "teacher": "Arq. Norman Foster"},
-            {"codeSubject": "ARQ-607", "subjectName": "DISEÑO VII",                               "credits": "5", "section": "01", "teacher": "Arq. Frank Gehry"},
-            {"codeSubject": "ARQ-405", "subjectName": "HISTORIA DE LA ARQUITECTURA DOMINICANA",   "credits": "3", "section": "02", "teacher": "Arq. José Ramón Báez López-Penha"},
+            {"codeSubject": "ARQ-620", "subjectName": "ARQUITECTURA BIOCLIMÁTICA",                "credits": "3", "section": "01", "teacher": "Arq. Norman Foster", "schedule": "Lu / Mi 14:00 - 16:00", "period": "Septiembre - Diciembre 2026", "observations": "AP"},
+            {"codeSubject": "ARQ-607", "subjectName": "DISEÑO VII",                               "credits": "5", "section": "01", "teacher": "Arq. Frank Gehry", "schedule": "Ma / Ju 08:00 - 12:00", "period": "Septiembre - Diciembre 2026", "observations": "AP"},
+            {"codeSubject": "ARQ-405", "subjectName": "HISTORIA DE LA ARQUITECTURA DOMINICANA",   "credits": "3", "section": "02", "teacher": "Arq. José Ramón Báez López-Penha", "schedule": "Vi 16:00 - 19:00", "period": "Septiembre - Diciembre 2026", "observations": "AP"},
         ],
+
         gpa_target=3.42,
         facultad="Facultad de Arquitectura y Arte",
     ),
@@ -564,15 +566,16 @@ MOCK_USERS = {
         ],
 
         officially_enrolled=[
-            {"codeSubject": "MED-237", "subjectName": "CIENCIAS BÁSICAS POR SISTEMAS I",          "credits": "16", "section": "01", "teacher": "Dra. Elizabeth Blackwell"},
-            {"codeSubject": "MED-247", "subjectName": "EPIDEMIOLOGÍA",                            "credits": "3",  "section": "01", "teacher": "Dr. John Snow"},
-            {"codeSubject": "MED-257", "subjectName": "SEMIOLOGÍA I",                             "credits": "4",  "section": "02", "teacher": "Dr. René Laënnec"},
+            {"codeSubject": "MED-237", "subjectName": "CIENCIAS BÁSICAS POR SISTEMAS I",          "credits": "16", "section": "01", "teacher": "Dra. Elizabeth Blackwell", "schedule": "Lu-Vi 08:00 - 14:00", "period": "Septiembre - Diciembre 2026", "observations": "AP"},
+            {"codeSubject": "MED-247", "subjectName": "EPIDEMIOLOGÍA",                            "credits": "3",  "section": "01", "teacher": "Dr. John Snow", "schedule": "Lu / Mi 15:00 - 17:00", "period": "Septiembre - Diciembre 2026", "observations": "AP"},
+            {"codeSubject": "MED-257", "subjectName": "SEMIOLOGÍA I",                             "credits": "4",  "section": "02", "teacher": "Dr. René Laënnec", "schedule": "Ma / Ju 14:00 - 17:00", "period": "Septiembre - Diciembre 2026", "observations": "AP"},
         ],
         unofficial_selected=[
-            {"codeSubject": "MED-237", "subjectName": "CIENCIAS BÁSICAS POR SISTEMAS I",          "credits": "16", "section": "01", "teacher": "Dra. Elizabeth Blackwell"},
-            {"codeSubject": "MED-247", "subjectName": "EPIDEMIOLOGÍA",                            "credits": "3",  "section": "01", "teacher": "Dr. John Snow"},
-            {"codeSubject": "MED-257", "subjectName": "SEMIOLOGÍA I",                             "credits": "4",  "section": "02", "teacher": "Dr. René Laënnec"},
+            {"codeSubject": "MED-237", "subjectName": "CIENCIAS BÁSICAS POR SISTEMAS I",          "credits": "16", "section": "01", "teacher": "Dra. Elizabeth Blackwell", "schedule": "Lu-Vi 08:00 - 14:00", "period": "Septiembre - Diciembre 2026", "observations": "AP"},
+            {"codeSubject": "MED-247", "subjectName": "EPIDEMIOLOGÍA",                            "credits": "3",  "section": "01", "teacher": "Dr. John Snow", "schedule": "Lu / Mi 15:00 - 17:00", "period": "Septiembre - Diciembre 2026", "observations": "AP"},
+            {"codeSubject": "MED-257", "subjectName": "SEMIOLOGÍA I",                             "credits": "4",  "section": "02", "teacher": "Dr. René Laënnec", "schedule": "Ma / Ju 14:00 - 17:00", "period": "Septiembre - Diciembre 2026", "observations": "AP"},
         ],
+
         gpa_target=3.16,
         facultad="Facultad de Ciencias de la Salud",
     ),
@@ -703,13 +706,14 @@ MOCK_USERS = {
         ],
 
         officially_enrolled=[
-            {"codeSubject": "DER-411", "subjectName": "DERECHO AMBIENTAL",                       "credits": "3", "section": "01", "teacher": "Dr. Luis Henrique da Silva"},
-            {"codeSubject": "DER-336", "subjectName": "DERECHO CIVIL VI",                        "credits": "4", "section": "02", "teacher": "Dra. Carmen Aida Ibarra"},
+            {"codeSubject": "DER-411", "subjectName": "DERECHO AMBIENTAL",                       "credits": "3", "section": "01", "teacher": "Dr. Luis Henrique da Silva", "schedule": "Lu / Mi 18:00 - 20:00", "period": "Septiembre - Diciembre 2026", "observations": "AP"},
+            {"codeSubject": "DER-336", "subjectName": "DERECHO CIVIL VI",                        "credits": "4", "section": "02", "teacher": "Dra. Carmen Aida Ibarra", "schedule": "Ma / Ju 18:00 - 21:00", "period": "Septiembre - Diciembre 2026", "observations": "AP"},
         ],
         unofficial_selected=[
-            {"codeSubject": "DER-411", "subjectName": "DERECHO AMBIENTAL",                       "credits": "3", "section": "01", "teacher": "Dr. Luis Henrique da Silva"},
-            {"codeSubject": "DER-336", "subjectName": "DERECHO CIVIL VI",                        "credits": "4", "section": "02", "teacher": "Dra. Carmen Aida Ibarra"},
+            {"codeSubject": "DER-411", "subjectName": "DERECHO AMBIENTAL",                       "credits": "3", "section": "01", "teacher": "Dr. Luis Henrique da Silva", "schedule": "Lu / Mi 18:00 - 20:00", "period": "Septiembre - Diciembre 2026", "observations": "AP"},
+            {"codeSubject": "DER-336", "subjectName": "DERECHO CIVIL VI",                        "credits": "4", "section": "02", "teacher": "Dra. Carmen Aida Ibarra", "schedule": "Ma / Ju 18:00 - 21:00", "period": "Septiembre - Diciembre 2026", "observations": "AP"},
         ],
+
         gpa_target=2.20,
         facultad="Facultad de Ciencias Jurídicas y Políticas",
     ),
