@@ -144,6 +144,13 @@ def unphu_proxy(subpath):
     if auth_header:
         headers['Authorization'] = auth_header
 
+    # Salvaguarda: Si es un token de prueba mock, re-enrutar a la API mock interna
+    if 'mock_token_' in auth_header:
+        target_url = f"{request.host_url.rstrip('/')}/api/mock/unphu/{subpath}"
+        if query_string:
+            target_url += '?' + query_string
+
+
     try:
         r = req.get(target_url, headers=headers, verify=False, timeout=10)
         from flask import Response

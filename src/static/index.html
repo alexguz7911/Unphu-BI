@@ -902,8 +902,13 @@
 
                 var { matricula, name, unphu_token, unphu_api_url, academic_person_id } = authData;
 
-                // Usar siempre el proxy server-side (/api/unphu-proxy) para evitar bloqueos CORS del navegador en cualquier dominio (localhost y Vercel)
-                var effective_api_url = window.location.origin + '/api/unphu-proxy';
+                // Los usuarios de prueba (mock) usan su propia API simulada (/api/mock/unphu).
+                // Los usuarios reales usan el proxy server-side (/api/unphu-proxy) para evitar bloqueos CORS.
+                var isMock = (unphu_token && String(unphu_token).startsWith('mock_')) || (unphu_api_url && unphu_api_url.includes('/api/mock/'));
+                var effective_api_url = isMock
+                    ? unphu_api_url
+                    : (window.location.origin + '/api/unphu-proxy');
+
 
 
                 // Paso 2: llamar a la API de UNPHU (directa en prod / proxy en local)
