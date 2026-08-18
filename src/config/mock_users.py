@@ -321,15 +321,16 @@ MOCK_USERS = {
         ],
 
         officially_enrolled=[
-            {"codeSubject": "INF-375", "subjectName": "PRINCIPIOS DE SISTEMAS OPERATIVOS",        "credits": "3", "section": "01", "teacher": "Dr. Alan Turing"},
-            {"codeSubject": "INF-377", "subjectName": "REDES DE COMPUTADORAS II",                 "credits": "3", "section": "02", "teacher": "Ing. Vint Cerf"},
-            {"codeSubject": "INF-378", "subjectName": "SISTEMAS CIBERFÍSICOS II",                 "credits": "3", "section": "01", "teacher": "Dra. Ada Lovelace"},
+            {"codeSubject": "INF-375", "subjectName": "PRINCIPIOS DE SISTEMAS OPERATIVOS",        "credits": "3", "section": "01", "teacher": "Ing. José Manuel Ramírez"},
+            {"codeSubject": "INF-377", "subjectName": "REDES DE COMPUTADORAS II",                 "credits": "3", "section": "02", "teacher": "Ing. Francisco García"},
+            {"codeSubject": "INF-378", "subjectName": "SISTEMAS CIBERFÍSICOS II",                 "credits": "3", "section": "01", "teacher": "Ing. Carlos Rosario"},
         ],
         unofficial_selected=[
-            {"codeSubject": "INF-375", "subjectName": "PRINCIPIOS DE SISTEMAS OPERATIVOS",        "credits": "3", "section": "01", "teacher": "Dr. Alan Turing"},
-            {"codeSubject": "INF-377", "subjectName": "REDES DE COMPUTADORAS II",                 "credits": "3", "section": "02", "teacher": "Ing. Vint Cerf"},
-            {"codeSubject": "INF-378", "subjectName": "SISTEMAS CIBERFÍSICOS II",                 "credits": "3", "section": "01", "teacher": "Dra. Ada Lovelace"},
+            {"codeSubject": "INF-375", "subjectName": "PRINCIPIOS DE SISTEMAS OPERATIVOS",        "credits": "3", "section": "01", "teacher": "Ing. José Manuel Ramírez"},
+            {"codeSubject": "INF-377", "subjectName": "REDES DE COMPUTADORAS II",                 "credits": "3", "section": "02", "teacher": "Ing. Francisco García"},
+            {"codeSubject": "INF-378", "subjectName": "SISTEMAS CIBERFÍSICOS II",                 "credits": "3", "section": "01", "teacher": "Ing. Carlos Rosario"},
         ],
+
         gpa_target=3.80,
         facultad="Facultad de Ciencias y Tecnología",
     ),
