@@ -578,7 +578,42 @@
 
             // Renderizar Periodos ya ordenados explícitamente (Descendente: Reciente -> Viejo)
             periods.forEach(period => {
-                const subjects = historyObj[period];
+                // Copia mutable del array base del período
+                let subjects = (historyObj[period] || []).slice();
+
+                // Helper para limpiar códigos de materia (ej. 'MAT-371-03' → 'MAT371')
+                const cleanCode = (str) => (str || '').replace(/[^A-Z0-9]/gi, '').toUpperCase();
+
+                // Parsear período actual para coincidir de forma infalible con index_history
+                const pUpper = (period || '').toUpperCase();
+                let pYr = 0, pPer = 0;
+                const matchP = pUpper.match(/(ENE|MAY|SEP|AGO|DIC|ABR).*?(\d{4})/);
+                if (matchP) {
+                    pYr = parseInt(matchP[2]);
+                    const m = matchP[1];
+                    if (['ENE','ABR'].includes(m)) pPer = 1;
+                    else if (['MAY','AGO'].includes(m)) pPer = 2;
+                    else if (['SEP','DIC'].includes(m)) pPer = 3;
+                }
+
+                const matchLabel = period.replace(/\s(\d{4})$/, '-$1');
+                const idxEntry = (unphuData.index_history || []).find(e => 
+                    (pYr > 0 && e.year === pYr && e.period === pPer) ||
+                    e.label === period ||
+                    e.label === matchLabel
+                );
+
+                if (idxEntry && idxEntry.semSubjects) {
+                    const existingCodes = new Set(subjects.map(s => cleanCode(s.code || s.codeSubject)));
+                    idxEntry.semSubjects.forEach(function(g) {
+                        const gClean = cleanCode(g.code);
+                        if (gClean && !existingCodes.has(gClean) && g.letter) {
+                            subjects.push(g);
+                            existingCodes.add(gClean);
+                        }
+                    });
+                }
+
                 totalSubjects += subjects.length;
 
                 // Calcular Index para este periodo específico
@@ -592,13 +627,17 @@
                     let pPoints = 0;
                     let isEvaluated = false;
 
-                    switch (sub.letter) {
+                    const letterUpper = (sub.letter || '').toString().trim().toUpperCase();
+                    switch (letterUpper) {
                         case 'A': pPoints = 4; isEvaluated = true; break;
                         case 'B': pPoints = 3; isEvaluated = true; break;
                         case 'C': pPoints = 2; isEvaluated = true; break;
                         case 'D': pPoints = 1; isEvaluated = true; break;
                         case 'F': 
                         case 'FI': pPoints = 0; isEvaluated = true; break;
+                        default:
+                            if (sub.status === 'Reprobado') { pPoints = 0; isEvaluated = true; }
+                            break;
                     }
 
                     if (isEvaluated) {

@@ -774,14 +774,53 @@
                 });
                 var batchResults = await Promise.all(batchPromises);
                 batchResults.forEach(function(r) {
-                    if (r.grades.length > 0) {
-                        var cum = parseFloat(r.grades[0].cumulativeIndex || 0);
-                        if (cum > 0.1) {
-                            var label = (PERIOD_LABELS[r.per] || 'PER-' + r.per) + '-' + r.yr;
-                            if (!seenLabels[label]) {
-                                seenLabels[label] = true;
-                                var sem = parseFloat(r.grades[0].semesterIndex || r.grades[0].periodIndex || cum);
-                                indexHistory.push({ label: label, cumulativeIndex: Math.round(cum*100)/100, semesterIndex: Math.round(sem*100)/100, year: r.yr, period: r.per });
+                    if (r.grades && r.grades.length > 0) {
+                        var label = (PERIOD_LABELS[r.per] || 'PER-' + r.per) + '-' + r.yr;
+                        if (!seenLabels[label]) {
+                            seenLabels[label] = true;
+
+                            var firstWithCum = r.grades.find(function(g){ return parseFloat(g.cumulativeIndex || g.indexPeriod || 0) > 0.1; }) || r.grades[0];
+                            var cum = firstWithCum ? parseFloat(firstWithCum.cumulativeIndex || 0) : 0;
+                            var sem = firstWithCum ? parseFloat(firstWithCum.semesterIndex || firstWithCum.periodIndex || cum) : cum;
+
+                            // Deduplicar materias del semestre por código base (quitar sección: 'MAT-371-03' → 'MAT-371')
+                            var seenCodes = {};
+                            var semSubjects = [];
+                            r.grades.forEach(function(g) {
+                                var rawCode = (g.codGroup || g.codeAsignatura || g.codeSubject || g.groupSubjectCode || g.code || '').trim();
+                                if (!rawCode && g.course) {
+                                    var matchCode = (g.course || '').match(/[A-Z]{3,4}-\d{3}/i);
+                                    if (matchCode) rawCode = matchCode[0];
+                                }
+                                var baseCode = rawCode.replace(/-\d+$/, '').trim().toUpperCase();
+                                if (baseCode && !seenCodes[baseCode]) {
+                                    seenCodes[baseCode] = true;
+                                    var let_ = (g.letter || g.calificacion || g.qualification || '').toString().trim().toUpperCase();
+                                    var cName = (g.course || g.subjectName || g.descripcion || g.subject || '').trim();
+                                    var numGrade = (g.qualification !== undefined && g.qualification !== null && g.qualification !== '') ? String(g.qualification) : '';
+                                    semSubjects.push({
+                                        code: baseCode,
+                                        name: cName,
+                                        credits: parseInt(g.credits || g.creditos || 0) || 0,
+                                        grade: numGrade,
+                                        letter: let_,
+                                        status: (let_ === 'F' || let_ === 'FI') ? 'Reprobado'
+                                              : (let_ === 'R' || let_ === 'W') ? 'Retirado'
+                                              : (['A','B','C','D','EX','CV'].indexOf(let_) !== -1) ? 'Aprobado'
+                                              : let_ ? 'Reprobado' : 'Cursando'
+                                    });
+                                }
+                            });
+
+                            if (semSubjects.length > 0 || cum > 0.1) {
+                                indexHistory.push({
+                                    label: label,
+                                    cumulativeIndex: Math.round(cum*100)/100,
+                                    semesterIndex: Math.round(sem*100)/100,
+                                    year: r.yr,
+                                    period: r.per,
+                                    semSubjects: semSubjects
+                                });
                             }
                         }
                     }
@@ -825,6 +864,9 @@
                 nombre: (studentData && studentData.names) ? studentData.names : nombre,
                 email: (studentData && studentData.email) ? studentData.email : '',
                 id_carrera: idCarrera,
+                nombre_carrera: activeCareer.NombreCarrera ||
+                    (activeCareer.Carrera ? (activeCareer.Carrera + (activeCareer.CodigoPensum ? ' ' + activeCareer.CodigoPensum : '')) : '') ||
+                    '',
                 stats: {
                     creditosAprobados: maxApproved,
                     creditosEvaluados: creditosEvaluados,

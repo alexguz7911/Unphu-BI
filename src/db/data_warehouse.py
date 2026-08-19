@@ -59,7 +59,16 @@ class DataWareHouseSync:
             """, (id_persona_real, raw_matricula, nombre_completo, f"{raw_matricula}@unphu.edu.do"))
             
             # --- 3. DIM_CARRERA ---
-            carrera_full = api_data.get('carrera', 'Carrera Genérica')
+            # Prioridad:
+            # 1. nombre_carrera — campo plano que envía el frontend (usuario real y mock)
+            # 2. careers[0]['NombreCarrera'] — estructura del mock si viene en api_data
+            # 3. 'Carrera Genérica' — fallback solo si ninguno de los anteriores existe
+            careers_list = api_data.get('careers', [])
+            carrera_full = (
+                api_data.get('nombre_carrera')
+                or (careers_list[0].get('NombreCarrera') if careers_list else None)
+                or 'Carrera Genérica'
+            )
             if real_id_carrera and str(real_id_carrera).isdigit():
                 id_carrera = int(real_id_carrera)
             else:
