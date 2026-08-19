@@ -945,12 +945,13 @@
 
                 var { matricula, name, unphu_token, unphu_api_url, academic_person_id } = authData;
 
-                // Los usuarios de prueba (mock) usan su propia API simulada (/api/mock/unphu).
-                // Los usuarios reales usan el proxy server-side (/api/unphu-proxy) para evitar bloqueos CORS.
+                // En producción (Vercel) las llamadas se hacen DIRECTAS desde el navegador del estudiante en RD para evitar bloqueo geográfico de Vercel EE.UU.
+                // En local (127.0.0.1) se usa el proxy local (/api/unphu-proxy) o la API mock.
+                var isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
                 var isMock = (unphu_token && String(unphu_token).startsWith('mock_')) || (unphu_api_url && unphu_api_url.includes('/api/mock/'));
                 var effective_api_url = isMock
                     ? unphu_api_url
-                    : (window.location.origin + '/api/unphu-proxy');
+                    : (isLocal ? (window.location.origin + '/api/unphu-proxy') : (unphu_api_url || 'https://client-api-gateway.unphusist.unphu.edu.do/legacy'));
 
 
 
