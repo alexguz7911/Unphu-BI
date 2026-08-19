@@ -1588,8 +1588,12 @@
                                 }
                                 avgMarker.style.left = `calc(${percentAvg}% - 1.5px)`;
 
-                                // Calcular y pintar la Tendencia (Index actual vs Index anterior 2.50)
-                                const lastIndex = 2.50;
+                                // Calcular y pintar la Tendencia (Índice acumulado actual vs cuatrimestre anterior)
+                                let lastIndex = cuIndex;
+                                const idxHist = unphuData.index_history || [];
+                                if (idxHist.length >= 2) {
+                                    lastIndex = parseFloat(idxHist[idxHist.length - 2].cumulativeIndex || cuIndex);
+                                }
                                 const dif = cuIndex - lastIndex;
                                 const tendenciaNode = document.getElementById('tendenciaIndexVal');
                                 if (dif > 0) {
