@@ -149,7 +149,7 @@
                 var passedCount = 0;
                 if (d.career_history) {
                     var passedSet = new Set();
-                    d.career_history.forEach(function(s){ if (s.qualification >= 70 || ['A','B','C','D'].indexOf((s.calification||'').toUpperCase()) !== -1) passedSet.add(s.codeSubject||s.code||s.Asignatura); });
+                    d.career_history.forEach(function(s){ if (s.qualification >= 70 || ['A','B','C'].indexOf((s.calification||'').toUpperCase()) !== -1) passedSet.add(s.codeSubject||s.code||s.Asignatura); });
                     passedCount = passedSet.size;
                 }
                 var passEl = document.getElementById('pmPassed'); if(passEl) passEl.textContent = passedCount > 0 ? passedCount : (d.stats?.materiasAprobadas || '—');
@@ -661,7 +661,8 @@
 
                     let calBadgeClass = 'text-slate-700 bg-slate-100';
                     if (calVal === 'A' || calVal === 'B') calBadgeClass = 'text-green-700 bg-green-50';
-                    else if (calVal === 'C' || calVal === 'D') calBadgeClass = 'text-blue-700 bg-blue-50';
+                    else if (calVal === 'C') calBadgeClass = 'text-blue-700 bg-blue-50';
+                    else if (calVal === 'D') calBadgeClass = 'text-amber-700 bg-amber-50 font-bold';
                     else if (calVal === 'EC') calBadgeClass = 'text-yellow-700 bg-yellow-50 font-bold';
                     else if (calVal === 'F' || calVal === 'FI') calBadgeClass = 'text-red-700 bg-red-50';
 

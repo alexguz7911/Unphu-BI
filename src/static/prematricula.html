@@ -176,7 +176,7 @@
                 var passedCount = 0;
                 if (d.career_history) {
                     var passedSet = new Set();
-                    d.career_history.forEach(function(s){ if (s.qualification >= 70 || ['A','B','C','D'].indexOf((s.calification||'').toUpperCase()) !== -1) passedSet.add(s.codeSubject||s.code||s.Asignatura); });
+                    d.career_history.forEach(function(s){ if (s.qualification >= 70 || ['A','B','C'].indexOf((s.calification||'').toUpperCase()) !== -1) passedSet.add(s.codeSubject||s.code||s.Asignatura); });
                     passedCount = passedSet.size;
                 }
                 var passEl = document.getElementById('pmPassed'); if(passEl) passEl.textContent = passedCount > 0 ? passedCount : (d.stats?.materiasAprobadas || '—');

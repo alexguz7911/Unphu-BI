@@ -140,7 +140,7 @@
                 var passedCount = 0;
                 if (d.career_history) {
                     var passedSet = new Set();
-                    d.career_history.forEach(function(s){ if (s.qualification >= 70 || ['A','B','C','D'].indexOf((s.calification||'').toUpperCase()) !== -1) passedSet.add(s.codeSubject||s.code||s.Asignatura); });
+                    d.career_history.forEach(function(s){ if (s.qualification >= 70 || ['A','B','C'].indexOf((s.calification||'').toUpperCase()) !== -1) passedSet.add(s.codeSubject||s.code||s.Asignatura); });
                     passedCount = passedSet.size;
                 }
                 var passEl = document.getElementById('pmPassed'); if(passEl) passEl.textContent = passedCount > 0 ? passedCount : (d.stats?.materiasAprobadas || '—');
@@ -527,7 +527,7 @@
                     const q = parseFloat(s.qualification);
                     const cal = (s.calification || s.calificacion || '').toUpperCase();
                     const code = s.codeSubject || s.code || s.Asignatura || '';
-                    if ((q >= 70 || ['A','B','C','D'].includes(cal)) && code && !passedCodeSet.has(code)) {
+                    if ((q >= 70 || ['A','B','C'].includes(cal)) && code && !passedCodeSet.has(code)) {
                         passedCodeSet.add(code);
                         passedCreds += parseInt(s.credits || s.creditos || s.creditoAsignatura || 3);
                     }
@@ -1115,7 +1115,7 @@
             d.career_history.forEach(s => {
                 const q = parseFloat(s.qualification);
                 const cal = (s.calification || s.calificacion || '').toUpperCase();
-                if (q >= 70 || ['A','B','C','D'].includes(cal)) {
+                if (q >= 70 || ['A','B','C'].includes(cal)) {
                     passedSet.add(s.codeSubject || s.code || s.Asignatura || '');
                 }
             });

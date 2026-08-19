@@ -732,7 +732,7 @@
             // Calcular estadísticas
             var maxApproved = 0, maxPensum = 0;
             // Solo letras de calificación reales = aprobado. 'AP' (Aprendizaje por Práctica) y 'T' NO son aprobación
-            var approvedGrades = ['A','B','C','D','EX','CV'];
+            var approvedGrades = ['A','B','C','EX','CV'];
             var creditosEvaluados = calculateCreditsEvaluated(allHistory);
 
             for (var i = 0; i < historial.length; i++) {
@@ -804,9 +804,9 @@
                                         credits: parseInt(g.credits || g.creditos || 0) || 0,
                                         grade: numGrade,
                                         letter: let_,
-                                        status: (let_ === 'F' || let_ === 'FI') ? 'Reprobado'
+                                        status: (let_ === 'F' || let_ === 'FI' || let_ === 'D') ? 'Reprobado'
                                               : (let_ === 'R' || let_ === 'W') ? 'Retirado'
-                                              : (['A','B','C','D','EX','CV'].indexOf(let_) !== -1) ? 'Aprobado'
+                                              : (['A','B','C','EX','CV'].indexOf(let_) !== -1) ? 'Aprobado'
                                               : let_ ? 'Reprobado' : 'Cursando'
                                     });
                                 }
