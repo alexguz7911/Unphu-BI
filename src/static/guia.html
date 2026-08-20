@@ -276,7 +276,7 @@
             if (!container) return;
 
             const gpa = parseFloat(d.indices?.cumulativeIndex || d.stats?.cumulativeIndex || 0);
-            const passedCount = (d.career_history || []).filter(s => s.qualification >= 70 || ['A','B','C','D'].includes((s.calification||'').toUpperCase())).length;
+            const passedCount = (d.career_history || []).filter(s => s.qualification >= 70 || ['A','B','C'].includes((s.calification||'').toUpperCase())).length;
             const inProgCount = (d.registered_subjects || d.selected_subjects || []).length;
 
             let alerts = [];

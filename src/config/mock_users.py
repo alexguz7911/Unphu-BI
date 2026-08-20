@@ -223,7 +223,7 @@ MOCK_USERS = {
         id_persona=242083,
 
         id_carrera=251,
-        total_pensum_credits=217,
+        total_pensum_credits=220,
         start_year=2024,
         end_year=2026,
 
@@ -309,6 +309,7 @@ MOCK_USERS = {
             {"codeSubject": "INF-431", "subject": "MINERÍA DE DATOS",                              "credits": 3, "lyrics": "", "number": "", "semester": "", "observations": "", "codeRequired": "INF-383",                   "pensumCredit": _pensum_credit_inf},
             {"codeSubject": "INF-435", "subject": "PROYECTO INTEGRADOR EN SISTEMAS CIBERFÍSICOS",  "credits": 3, "lyrics": "", "number": "", "semester": "", "observations": "", "codeRequired": "INF-380,INF-381",           "pensumCredit": _pensum_credit_inf},
             # P11
+            {"codeSubject": "ELT-002", "subject": "ELECTIVA II (DEPORTES O ARTES)",                "credits": 1, "lyrics": "", "number": "", "semester": "", "observations": "", "codeRequired": "",                          "pensumCredit": _pensum_credit_inf},
             {"codeSubject": "INF-433", "subject": "ELECTIVA IV",                                   "credits": 3, "lyrics": "", "number": "", "semester": "", "observations": "", "codeRequired": "INF-276,INF-374,INF-381,INF-383", "pensumCredit": _pensum_credit_inf},
             {"codeSubject": "INI-510", "subject": "ÉTICA PROFESIONAL",                             "credits": 3, "lyrics": "", "number": "", "semester": "", "observations": "", "codeRequired": "",                          "pensumCredit": _pensum_credit_inf},
             {"codeSubject": "INF-440", "subject": "MODELADO Y SIMULACIÓN DE SISTEMAS CIBERFÍSICOS","credits": 3, "lyrics": "", "number": "", "semester": "", "observations": "", "codeRequired": "INF-435",                   "pensumCredit": _pensum_credit_inf},

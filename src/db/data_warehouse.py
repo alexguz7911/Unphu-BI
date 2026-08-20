@@ -9,7 +9,7 @@ class DataWareHouseSync:
     """
     
     @staticmethod
-    def sync_student_login(api_data: Dict[str, Any], raw_matricula: str, nombre_completo: str, real_id_carrera: str = None):
+    def sync_student_login(api_data: Dict[str, Any], raw_matricula: str, nombre_completo: str, real_id_carrera: Optional[str] = None):
         """
         Punto de entrada principal para guardar la info cada vez que un estudiante inicia sesión.
         """
@@ -17,6 +17,7 @@ class DataWareHouseSync:
         if not conn:
             return
         
+        cursor = None
         try:
             cursor = conn.cursor()
             
@@ -59,11 +60,25 @@ class DataWareHouseSync:
             """, (id_persona_real, raw_matricula, nombre_completo, f"{raw_matricula}@unphu.edu.do"))
             
             # --- 3. DIM_CARRERA ---
-            carrera_full = api_data.get('carrera', 'Carrera Genérica')
-            if real_id_carrera and str(real_id_carrera).isdigit():
+            # Prioridad:
+            # 1. nombre_carrera — campo plano que envía el frontend (usuario real y mock)
+            # 2. careers[0]['NombreCarrera'] — estructura del mock si viene en api_data
+            # 3. 'Carrera Genérica' — fallback solo si ninguno de los anteriores existe
+            careers_list = api_data.get('careers', [])
+            carrera_full = (
+                api_data.get('nombre_carrera')
+                or (careers_list[0].get('NombreCarrera') if careers_list else None)
+                or 'Carrera Genérica'
+            )
+            if real_id_carrera and real_id_carrera.isdigit() and int(real_id_carrera) != 0:
                 id_carrera = int(real_id_carrera)
             else:
-                id_carrera = hash(carrera_full) % 10000000 # Rango mayor para evitar colisiones
+                cursor.execute("SELECT IdCarreraActiva FROM Dim_Estudiante WHERE Matricula = %s", (raw_matricula,))
+                row_c = cursor.fetchone()
+                if row_c and row_c[0] and row_c[0] != 0:
+                    id_carrera = row_c[0]
+                else:
+                    id_carrera = hash(carrera_full) % 10000000 # Rango mayor para evitar colisiones
             
             facultad_carrera = api_data.get('student_data', {}).get('facultad', '') or ''
 
@@ -77,7 +92,8 @@ class DataWareHouseSync:
             
             
             # --- 4. ACTUALIZAR ESTUDIANTE CON SU CARRERA ---
-            cursor.execute("UPDATE Dim_Estudiante SET IdCarreraActiva = %s WHERE Matricula = %s", (id_carrera, raw_matricula))
+            if id_carrera and id_carrera != 0:
+                cursor.execute("UPDATE Dim_Estudiante SET IdCarreraActiva = %s WHERE Matricula = %s", (id_carrera, raw_matricula))
 
 
             # --- 5. DIM_ASIGNATURAS Y FACT_CALIFICACIONES (HISTORIAL) ---
@@ -145,8 +161,10 @@ class DataWareHouseSync:
             conn.rollback()
             print(f"❌ Error durante sincronización DW PostgreSQL: {e}")
         finally:
-            cursor.close()
-            conn.close()
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
 
     @staticmethod
     def sync_semester_grades_direct(raw_matricula: str, id_carrera: str, year: int, period_num: int, grades: list):
@@ -154,6 +172,7 @@ class DataWareHouseSync:
         conn = DBConnection.get_connection()
         if not conn: return
         
+        cursor = None
         try:
             cursor = conn.cursor()
             
@@ -225,8 +244,10 @@ class DataWareHouseSync:
             conn.rollback()
             print(f"❌ Error insertando notas semestrales directas en DW: {e}")
         finally:
-            cursor.close()
-            conn.close()
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
 
     @staticmethod
     def get_student_ranking(matricula: str) -> dict:
@@ -234,6 +255,7 @@ class DataWareHouseSync:
         if not conn:
             return {"rank": "--", "total": "--"}
         
+        cursor = None
         try:
             cursor = conn.cursor()
             query = """

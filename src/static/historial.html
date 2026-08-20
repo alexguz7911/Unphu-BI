@@ -140,7 +140,7 @@
                 var passedCount = 0;
                 if (d.career_history) {
                     var passedSet = new Set();
-                    d.career_history.forEach(function(s){ if (s.qualification >= 70 || ['A','B','C','D'].indexOf((s.calification||'').toUpperCase()) !== -1) passedSet.add(s.codeSubject||s.code||s.Asignatura); });
+                    d.career_history.forEach(function(s){ if (s.qualification >= 70 || ['A','B','C'].indexOf((s.calification||'').toUpperCase()) !== -1) passedSet.add(s.codeSubject||s.code||s.Asignatura); });
                     passedCount = passedSet.size;
                 }
                 var passEl = document.getElementById('pmPassed'); if(passEl) passEl.textContent = passedCount > 0 ? passedCount : (d.stats?.materiasAprobadas || '—');
@@ -541,7 +541,7 @@
                     const q = parseFloat(s.qualification);
                     const cal = (s.calification || s.calificacion || '').toUpperCase();
                     const code = s.codeSubject || s.code || s.Asignatura || '';
-                    if ((q >= 70 || ['A','B','C','D'].includes(cal)) && code && !passedCodeSet.has(code)) {
+                    if ((q >= 70 || ['A','B','C'].includes(cal)) && code && !passedCodeSet.has(code)) {
                         passedCodeSet.add(code);
                         passedCreds += parseInt(s.credits || s.creditos || s.creditoAsignatura || 3);
                     }
@@ -602,7 +602,42 @@
 
             // Renderizar Periodos ya ordenados explícitamente (Descendente: Reciente -> Viejo)
             periods.forEach(period => {
-                const subjects = historyObj[period];
+                // Copia mutable del array base del período
+                let subjects = (historyObj[period] || []).slice();
+
+                // Helper para limpiar códigos de materia (ej. 'MAT-371-03' → 'MAT371')
+                const cleanCode = (str) => (str || '').replace(/[^A-Z0-9]/gi, '').toUpperCase();
+
+                // Parsear período actual para coincidir de forma infalible con index_history
+                const pUpper = (period || '').toUpperCase();
+                let pYr = 0, pPer = 0;
+                const matchP = pUpper.match(/(ENE|MAY|SEP|AGO|DIC|ABR).*?(\d{4})/);
+                if (matchP) {
+                    pYr = parseInt(matchP[2]);
+                    const m = matchP[1];
+                    if (['ENE','ABR'].includes(m)) pPer = 1;
+                    else if (['MAY','AGO'].includes(m)) pPer = 2;
+                    else if (['SEP','DIC'].includes(m)) pPer = 3;
+                }
+
+                const matchLabel = period.replace(/\s(\d{4})$/, '-$1');
+                const idxEntry = (unphuData.index_history || []).find(e => 
+                    (pYr > 0 && e.year === pYr && e.period === pPer) ||
+                    e.label === period ||
+                    e.label === matchLabel
+                );
+
+                if (idxEntry && idxEntry.semSubjects) {
+                    const existingCodes = new Set(subjects.map(s => cleanCode(s.code || s.codeSubject)));
+                    idxEntry.semSubjects.forEach(function(g) {
+                        const gClean = cleanCode(g.code);
+                        if (gClean && !existingCodes.has(gClean) && g.letter) {
+                            subjects.push(g);
+                            existingCodes.add(gClean);
+                        }
+                    });
+                }
+
                 totalSubjects += subjects.length;
 
                 // Calcular Index para este periodo específico
@@ -616,13 +651,17 @@
                     let pPoints = 0;
                     let isEvaluated = false;
 
-                    switch (sub.letter) {
+                    const letterUpper = (sub.letter || '').toString().trim().toUpperCase();
+                    switch (letterUpper) {
                         case 'A': pPoints = 4; isEvaluated = true; break;
                         case 'B': pPoints = 3; isEvaluated = true; break;
                         case 'C': pPoints = 2; isEvaluated = true; break;
                         case 'D': pPoints = 1; isEvaluated = true; break;
                         case 'F': 
                         case 'FI': pPoints = 0; isEvaluated = true; break;
+                        default:
+                            if (sub.status === 'Reprobado') { pPoints = 0; isEvaluated = true; }
+                            break;
                     }
 
                     if (isEvaluated) {
@@ -1116,7 +1155,7 @@
             d.career_history.forEach(s => {
                 const q = parseFloat(s.qualification);
                 const cal = (s.calification || s.calificacion || '').toUpperCase();
-                if (q >= 70 || ['A','B','C','D'].includes(cal)) {
+                if (q >= 70 || ['A','B','C'].includes(cal)) {
                     passedSet.add(s.codeSubject || s.code || s.Asignatura || '');
                 }
             });
@@ -1311,7 +1350,7 @@
                 <div style="display:flex; align-items:center; gap:1.25rem;">
                     <div style="width:72px; height:72px; border-radius:18px; background:linear-gradient(135deg,#0f9d58,#0a7a44); display:flex; align-items:center; justify-content:center; color:white; font-weight:900; font-size:28px; border:2px solid rgba(255,255,255,0.2); box-shadow:0 8px 20px rgba(0,0,0,0.2);" id="pmAvatar">U</div>
                     <div style="flex:1;">
-                        <div style="font-size:1.35rem; font-weight:900; text-transform:uppercase; tracking-wide;" id="pmName">Estudiante</div>
+                        <div style="font-size:1.35rem; font-weight:900; text-transform:uppercase; letter-spacing:0.025em;" id="pmName">Estudiante</div>
                         <div style="font-size:13px; color:#94a3b8; font-family:monospace; margin-top:2px;" id="pmMatricula">Matrícula: —</div>
                         <div style="font-size:12px; color:#cbd5e1; margin-top:4px;" id="pmCareer">Ingeniería en Sistemas Computacionales</div>
                     </div>

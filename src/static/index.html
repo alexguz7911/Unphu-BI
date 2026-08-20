@@ -426,7 +426,7 @@
             <!-- Opcion de Login Mock para Presentacion -->
             <div class="mock-login-section" style="margin-top: 1.5rem; border-top: 1px dashed rgba(61, 151, 68, 0.25); padding-top: 1.25rem;">
                 <a href="javascript:void(0)" onclick="toggleMockSection()" id="mock-toggle-link" style="color: var(--primary-green); text-decoration: none; font-size: 13.5px; font-weight: 600; display: inline-block; transition: all 0.3s ease; padding: 4px 8px; border-radius: 8px;">
-                    ⚡ Ingresar como usuario de prueba (Mock)
+                    Ingresar como usuario de prueba
                 </a>
                 <div id="mock-selection-area" style="display: none; margin-top: 1rem; flex-direction: column; gap: 0.75rem; text-align: left; animation: fadeIn 0.3s ease;">
                     <label for="mock-user-select" style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Selecciona un perfil:</label>
@@ -460,7 +460,7 @@
                 link.style.color = '#EA4335';
             } else {
                 area.style.display = 'none';
-                link.textContent = '⚡ Ingresar como usuario de prueba (Mock)';
+                link.textContent = 'Ingresar como usuario de prueba';
                 link.style.color = 'var(--primary-green)';
             }
         }
@@ -732,7 +732,7 @@
             // Calcular estadísticas
             var maxApproved = 0, maxPensum = 0;
             // Solo letras de calificación reales = aprobado. 'AP' (Aprendizaje por Práctica) y 'T' NO son aprobación
-            var approvedGrades = ['A','B','C','D','EX','CV'];
+            var approvedGrades = ['A','B','C','EX','CV'];
             var creditosEvaluados = calculateCreditsEvaluated(allHistory);
 
             for (var i = 0; i < historial.length; i++) {
@@ -774,14 +774,53 @@
                 });
                 var batchResults = await Promise.all(batchPromises);
                 batchResults.forEach(function(r) {
-                    if (r.grades.length > 0) {
-                        var cum = parseFloat(r.grades[0].cumulativeIndex || 0);
-                        if (cum > 0.1) {
-                            var label = (PERIOD_LABELS[r.per] || 'PER-' + r.per) + '-' + r.yr;
-                            if (!seenLabels[label]) {
-                                seenLabels[label] = true;
-                                var sem = parseFloat(r.grades[0].semesterIndex || r.grades[0].periodIndex || cum);
-                                indexHistory.push({ label: label, cumulativeIndex: Math.round(cum*100)/100, semesterIndex: Math.round(sem*100)/100, year: r.yr, period: r.per });
+                    if (r.grades && r.grades.length > 0) {
+                        var label = (PERIOD_LABELS[r.per] || 'PER-' + r.per) + '-' + r.yr;
+                        if (!seenLabels[label]) {
+                            seenLabels[label] = true;
+
+                            var firstWithCum = r.grades.find(function(g){ return parseFloat(g.cumulativeIndex || g.indexPeriod || 0) > 0.1; }) || r.grades[0];
+                            var cum = firstWithCum ? parseFloat(firstWithCum.cumulativeIndex || 0) : 0;
+                            var sem = firstWithCum ? parseFloat(firstWithCum.semesterIndex || firstWithCum.periodIndex || cum) : cum;
+
+                            // Deduplicar materias del semestre por código base (quitar sección: 'MAT-371-03' → 'MAT-371')
+                            var seenCodes = {};
+                            var semSubjects = [];
+                            r.grades.forEach(function(g) {
+                                var rawCode = (g.codGroup || g.codeAsignatura || g.codeSubject || g.groupSubjectCode || g.code || '').trim();
+                                if (!rawCode && g.course) {
+                                    var matchCode = (g.course || '').match(/[A-Z]{3,4}-\d{3}/i);
+                                    if (matchCode) rawCode = matchCode[0];
+                                }
+                                var baseCode = rawCode.replace(/-\d+$/, '').trim().toUpperCase();
+                                if (baseCode && !seenCodes[baseCode]) {
+                                    seenCodes[baseCode] = true;
+                                    var let_ = (g.letter || g.calificacion || g.qualification || '').toString().trim().toUpperCase();
+                                    var cName = (g.course || g.subjectName || g.descripcion || g.subject || '').trim();
+                                    var numGrade = (g.qualification !== undefined && g.qualification !== null && g.qualification !== '') ? String(g.qualification) : '';
+                                    semSubjects.push({
+                                        code: baseCode,
+                                        name: cName,
+                                        credits: parseInt(g.credits || g.creditos || 0) || 0,
+                                        grade: numGrade,
+                                        letter: let_,
+                                        status: (let_ === 'F' || let_ === 'FI' || let_ === 'D') ? 'Reprobado'
+                                              : (let_ === 'R' || let_ === 'W') ? 'Retirado'
+                                              : (['A','B','C','EX','CV'].indexOf(let_) !== -1) ? 'Aprobado'
+                                              : let_ ? 'Reprobado' : 'Cursando'
+                                    });
+                                }
+                            });
+
+                            if (semSubjects.length > 0 || cum > 0.1) {
+                                indexHistory.push({
+                                    label: label,
+                                    cumulativeIndex: Math.round(cum*100)/100,
+                                    semesterIndex: Math.round(sem*100)/100,
+                                    year: r.yr,
+                                    period: r.per,
+                                    semSubjects: semSubjects
+                                });
                             }
                         }
                     }
@@ -825,6 +864,9 @@
                 nombre: (studentData && studentData.names) ? studentData.names : nombre,
                 email: (studentData && studentData.email) ? studentData.email : '',
                 id_carrera: idCarrera,
+                nombre_carrera: activeCareer.NombreCarrera ||
+                    (activeCareer.Carrera ? (activeCareer.Carrera + (activeCareer.CodigoPensum ? ' ' + activeCareer.CodigoPensum : '')) : '') ||
+                    '',
                 stats: {
                     creditosAprobados: maxApproved,
                     creditosEvaluados: creditosEvaluados,
@@ -903,12 +945,13 @@
 
                 var { matricula, name, unphu_token, unphu_api_url, academic_person_id } = authData;
 
-                // Los usuarios de prueba (mock) usan su propia API simulada (/api/mock/unphu).
-                // Los usuarios reales usan el proxy server-side (/api/unphu-proxy) para evitar bloqueos CORS.
+                // En producción (Vercel) las llamadas se hacen DIRECTAS desde el navegador del estudiante en RD para evitar bloqueo geográfico de Vercel EE.UU.
+                // En local (127.0.0.1) se usa el proxy local (/api/unphu-proxy) o la API mock.
+                var isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
                 var isMock = (unphu_token && String(unphu_token).startsWith('mock_')) || (unphu_api_url && unphu_api_url.includes('/api/mock/'));
                 var effective_api_url = isMock
                     ? unphu_api_url
-                    : (window.location.origin + '/api/unphu-proxy');
+                    : (isLocal ? (window.location.origin + '/api/unphu-proxy') : (unphu_api_url || 'https://client-api-gateway.unphusist.unphu.edu.do/legacy'));
 
 
 
