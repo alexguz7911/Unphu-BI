@@ -140,7 +140,14 @@ def unphu_proxy(subpath):
 
     # Reenviar el Authorization header que mandó el browser
     auth_header = request.headers.get('Authorization', '')
-    headers = {}
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'application/json, text/plain, */*',
+        'Origin': 'https://mi.unphu.edu.do',
+        'Referer': 'https://mi.unphu.edu.do/',
+        'Accept-Language': 'es-ES,es;q=0.9',
+        'Connection': 'keep-alive'
+    }
     if auth_header:
         headers['Authorization'] = auth_header
 

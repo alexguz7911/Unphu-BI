@@ -444,8 +444,22 @@
             document.getElementById('kpiGpa').textContent = cumulativeGpa.toFixed(2);
 
             if (unphuData.stats) {
-                document.getElementById('kpiCreditsPassed').textContent = unphuData.stats.creditosAprobados || 0;
-                document.getElementById('kpiCreditsTotal').textContent = `de ${unphuData.stats.totalCreditos || 0}`;
+                const totalCreditos = parseInt(unphuData.stats.totalCreditos || 0);
+                let pendientesReales = 0;
+                if (Array.isArray(unphuData.pending_subjects)) {
+                    pendientesReales = unphuData.pending_subjects.reduce((acc, item) => acc + (parseInt(item.credits) || parseInt(item.creditos) || parseInt(item.Creditos) || 0), 0);
+                } else {
+                    pendientesReales = Math.max(0, unphuData.stats.creditosPendientes || 0);
+                }
+                
+                // Créditos Acumulados reales = Total - Pendientes
+                let acumulados = parseInt(unphuData.stats.creditosAprobados || 0);
+                if (totalCreditos > 0 && pendientesReales >= 0) {
+                    acumulados = totalCreditos - pendientesReales;
+                }
+                
+                document.getElementById('kpiCreditsPassed').textContent = acumulados;
+                document.getElementById('kpiCreditsTotal').textContent = `de ${totalCreditos}`;
             }
 
             // Extraer y procesar lógica para todos los semestres
@@ -536,24 +550,34 @@
             if (passedCreds === 0) passedCreds = parseInt(unphuData.stats?.creditosAprobados || 0);
 
             const progressPct = totalCreds > 0 ? Math.min(100, Math.round((passedCreds / totalCreds) * 100)) : 0;
-            const inProgressPct = totalPensumSubj > 0 ? Math.round((countInProgress / totalPensumSubj) * 100) : 0;
-            const pendingPct = totalPensumSubj > 0 ? Math.round((countPending / totalPensumSubj) * 100) : 0;
+            
+            let inProgressCreds = 0;
+            activeEnrolled.forEach(s => {
+                inProgressCreds += parseInt(s.credits || s.creditos || s.creditoAsignatura || 3);
+            });
+            const inProgressPct = totalCreds > 0 ? Math.round((inProgressCreds / totalCreds) * 100) : 0;
+            const pendingPct = Math.max(0, 100 - progressPct - inProgressPct);
 
-            document.getElementById('semaforoPercent').textContent = `${progressPct}%`;
+            // Porcentajes para el gráfico y las barras laterales basados en las materias
+            const subjectsPassedPct = totalPensumSubj > 0 ? Math.round((countPassed / totalPensumSubj) * 100) : 0;
+            const subjectsInProgressPct = totalPensumSubj > 0 ? Math.round((countInProgress / totalPensumSubj) * 100) : 0;
+            const subjectsPendingPct = totalPensumSubj > 0 ? Math.max(0, 100 - subjectsPassedPct - subjectsInProgressPct) : 0;
+
+            document.getElementById('semaforoPercent').textContent = `${subjectsPassedPct}%`;
             document.getElementById('semaforoSubtext').textContent = `Has completado ${passedCreds} de ${totalCreds} créditos (${countPassed} de ${totalPensumSubj} materias)`;
 
             // Dash array offset calculation para stroke-dashoffset = 100
             setTimeout(() => {
-                const totalPendientePct = progressPct + inProgressPct + pendingPct;
-                const totalInCursoPct = progressPct + inProgressPct;
+                const totalPendientePct = subjectsPassedPct + subjectsInProgressPct + subjectsPendingPct; // Siempre será 100
+                const totalInCursoPct = subjectsPassedPct + subjectsInProgressPct;
 
                 document.getElementById('semaforoPendienteCircle').setAttribute('stroke-dashoffset', 100 - totalPendientePct);
                 document.getElementById('semaforoEnCursoCircle').setAttribute('stroke-dashoffset', 100 - totalInCursoPct);
-                document.getElementById('semaforoCircle').setAttribute('stroke-dashoffset', 100 - progressPct);
+                document.getElementById('semaforoCircle').setAttribute('stroke-dashoffset', 100 - subjectsPassedPct);
 
-                document.getElementById('semaforoAprobadasBar').style.width = `${progressPct}%`;
-                document.getElementById('semaforoEnCursoBar').style.width = `${inProgressPct}%`;
-                document.getElementById('semaforoPendientesBar').style.width = `${pendingPct}%`;
+                document.getElementById('semaforoAprobadasBar').style.width = `${subjectsPassedPct}%`;
+                document.getElementById('semaforoEnCursoBar').style.width = `${subjectsInProgressPct}%`;
+                document.getElementById('semaforoPendientesBar').style.width = `${subjectsPendingPct}%`;
             }, 300);
 
             document.getElementById('semaforoAprobadas').textContent = `${countPassed}/${totalPensumSubj}`;
@@ -1060,9 +1084,25 @@
         document.getElementById('rGpa').textContent = gpa > 0 ? gpa.toFixed(2) : '—';
 
         // ── Credits ──
-        const credAprobados = parseInt(d.stats?.creditosAprobados || 0);
-        const credTotal = parseInt(d.stats?.totalCreditos || 216);
-        const credRemaining = Math.max(0, credTotal - credAprobados);
+        const credTotal = parseInt(d.stats?.totalCreditos || 220);
+        let pendientesReales = 0;
+        let trulyPendingCount = 0;
+        if (Array.isArray(d.pending_subjects)) {
+            trulyPendingCount = d.pending_subjects.length;
+            pendientesReales = d.pending_subjects.reduce((acc, item) => acc + (parseInt(item.credits) || parseInt(item.creditos) || parseInt(item.Creditos) || 0), 0);
+        } else {
+            pendientesReales = Math.max(0, d.stats?.creditosPendientes || 0);
+        }
+        
+        const currentSubs = d.registered_subjects || d.selected_subjects || [];
+        const currentSubsCredits = currentSubs.reduce((sum, s) => sum + parseInt(s.credits || s.creditos || 0), 0);
+        
+        let credAprobados = parseInt(d.stats?.creditosAprobados || 0);
+        if (credTotal > 0 && pendientesReales >= 0) {
+            credAprobados = credTotal - pendientesReales - currentSubsCredits;
+        }
+        const credRemaining = pendientesReales;
+
         document.getElementById('rCredits').textContent = `${credAprobados}/${credTotal}`;
         document.getElementById('rCredRemaining').textContent = credRemaining;
 
@@ -1085,12 +1125,10 @@
         document.getElementById('rPassed').textContent = passedCount || (d.stats?.materiasAprobadas || '—');
 
         // ── In-Progress ──
-        const currentSubs = d.registered_subjects || d.selected_subjects || [];
         document.getElementById('rInProgress').textContent = currentSubs.length || '—';
 
         // ── Semester Projection ──
         const avgCreditsPerQuarter = 15;
-        const currentSubsCredits = currentSubs.reduce((sum, s) => sum + parseInt(s.credits || s.creditos || 0), 0);
         let semestersLeft;
         if (credRemaining <= 0) {
             semestersLeft = 0;
@@ -1102,16 +1140,12 @@
         document.getElementById('rSemesters').textContent = semestersLeft <= 0 ? '0 (Completado)' : semestersLeft === 1 ? '1 (Cuatrimestre en curso)' : `${semestersLeft} cuatrimestres`;
 
         // ── Subjects remaining ──
-        const pendingSubs = (d.pending_subjects || []).filter(p => {
-            const code = p.code || p.codeSubject || p.codeAsignatura || '';
-            return code && !passedSet.has(code);
-        });
         const currentCodes = new Set(currentSubs.map(s => s.groupSubjectCode || s.codeAsignatura || s.code || ''));
-        const trulyPending = pendingSubs.filter(p => !currentCodes.has(p.code || p.codeSubject || ''));
-        document.getElementById('rSubjectsLeft').textContent = (trulyPending.length + currentSubs.length) || '—';
+        const trulyPending = (d.pending_subjects || []).filter(p => !currentCodes.has(p.code || p.codeSubject || ''));
+        document.getElementById('rSubjectsLeft').textContent = trulyPendingCount || '—';
 
         // ── Period ──
-        let periodStr = 'Mayo - Agosto 2026';
+        let periodStr = 'Septiembre - Diciembre 2026';
         if (d.current_period && d.current_period.length > 0) {
             const cp = d.current_period[0];
             if (cp.Periodo) periodStr = cp.Periodo;
