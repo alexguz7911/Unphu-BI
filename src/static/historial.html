@@ -629,11 +629,21 @@
 
                 if (idxEntry && idxEntry.semSubjects) {
                     const existingCodes = new Set(subjects.map(s => cleanCode(s.code || s.codeSubject)));
+                    const existingNames = new Set(subjects.map(s => (s.name || s.subject || s.subjectName || '').trim().toUpperCase()));
+                    
                     idxEntry.semSubjects.forEach(function(g) {
                         const gClean = cleanCode(g.code);
-                        if (gClean && !existingCodes.has(gClean) && g.letter) {
+                        const gName = (g.name || g.subject || g.subjectName || '').trim().toUpperCase();
+                        
+                        if ((gClean && existingCodes.has(gClean)) || (gName && existingNames.has(gName))) {
+                            return;
+                        }
+                        
+                        if (gClean) existingCodes.add(gClean);
+                        if (gName) existingNames.add(gName);
+                        
+                        if (g.letter) {
                             subjects.push(g);
-                            existingCodes.add(gClean);
                         }
                     });
                 }
