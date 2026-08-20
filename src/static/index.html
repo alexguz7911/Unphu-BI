@@ -783,24 +783,31 @@
                             var cum = firstWithCum ? parseFloat(firstWithCum.cumulativeIndex || 0) : 0;
                             var sem = firstWithCum ? parseFloat(firstWithCum.semesterIndex || firstWithCum.periodIndex || cum) : cum;
 
-                            // Deduplicar materias del semestre por código base (quitar sección: 'MAT-371-03' → 'MAT-371')
+                            // Deduplicar materias del semestre por código base y por nombre
                             var seenCodes = {};
+                            var seenNames = {};
                             var semSubjects = [];
                             r.grades.forEach(function(g) {
+                                var cName = (g.course || g.subjectName || g.descripcion || g.subject || '').trim();
+                                var cNameUpper = cName.toUpperCase();
                                 var rawCode = (g.codGroup || g.codeAsignatura || g.codeSubject || g.groupSubjectCode || g.code || '').trim();
                                 if (!rawCode && g.course) {
                                     var matchCode = (g.course || '').match(/[A-Z]{3,4}-\d{3}/i);
                                     if (matchCode) rawCode = matchCode[0];
                                 }
                                 var baseCode = rawCode.replace(/-\d+$/, '').trim().toUpperCase();
-                                if (baseCode && !seenCodes[baseCode]) {
-                                    seenCodes[baseCode] = true;
-                                    var let_ = (g.letter || g.calificacion || g.qualification || '').toString().trim().toUpperCase();
-                                    var cName = (g.course || g.subjectName || g.descripcion || g.subject || '').trim();
-                                    var numGrade = (g.qualification !== undefined && g.qualification !== null && g.qualification !== '') ? String(g.qualification) : '';
-                                    semSubjects.push({
-                                        code: baseCode,
-                                        name: cName,
+                                
+                                // Si ya vimos este código exacto o el nombre exacto de la materia en este cuatrimestre, es un duplicado
+                                if ((baseCode && seenCodes[baseCode]) || (cNameUpper && seenNames[cNameUpper])) return;
+                                
+                                if (baseCode) seenCodes[baseCode] = true;
+                                if (cNameUpper) seenNames[cNameUpper] = true;
+
+                                var let_ = (g.letter || g.calificacion || g.qualification || '').toString().trim().toUpperCase();
+                                var numGrade = (g.qualification !== undefined && g.qualification !== null && g.qualification !== '') ? String(g.qualification) : '';
+                                semSubjects.push({
+                                    code: baseCode,
+                                    name: cName,
                                         credits: parseInt(g.credits || g.creditos || 0) || 0,
                                         grade: numGrade,
                                         letter: let_,
